@@ -1,28 +1,29 @@
 import tensorflow as tf
 import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
-from keras import layers, models
-
 
 class Model:
-    @staticmethod
+    @staticmethod  
     def create_model(learning_rate):
-        nn = models.Sequential([
-            layers.Dense(64, activation='relu', input_shape=(28, 28)),
-            layers.Dense(32, activation='relu'),
-            layers.Dense(10, activation='softmax')
+        model = tf.keras.models.Sequential([
+            tf.keras.layers.Dense(8, activation='relu', input_dim=8),
+            tf.keras.layers.Dense(8, activation='relu'),
+            tf.keras.layers.Dense(1, activation='sigmoid')
         ])
-        nn.compile(optimizer=keras.optimizers.Adam(learning_rate=learning_rate), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        model.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=learning_rate), metrics=['accuracy'])
 
-        return nn
+        return model
 
     #@staticmethod
     #def set_weights(weights):
     @staticmethod
     def prepare_weights(weights):
 
-        flattened_weights = np.array(weights) # الأوزان لزمن طبقة نم باي اراي وطوله 4266
-        shapes = [(28, 64), (64,), (64, 32), (32,), (32, 10), (10,)] # شكل النيورنات في كل طبقة
+        flattened_weights = np.array(weights) # الأوزان لزمن طبقة نم باي اراي وطوله 153
+        shapes = [(8, 8), (8,), (8, 8), (8,), (8, 1), (1,)] # شكل النيورنات في كل طبقة
 
         reshaped_weights = []
         start_idx = 0
@@ -35,43 +36,49 @@ class Model:
         return reshaped_weights
 
     @staticmethod
-    def fit_function(weights, data):      
-        (train_ds, test_ds) = data
+    def fitness_function(weights, data):      
+        (X_train, y_train), (X_test, y_test) = data
 
         # [weights -> 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1, 0.11, 0.12, learning -> 0.01]
         learning_rate = weights[-1]
         weights = weights[:-1]
 
-        print("Learning rate: ", learning_rate)
-        print("Weights: ", weights)
-        print("Weights shape: ", len(weights))
-
         weights = Model.prepare_weights(weights)
-            
         model = Model.create_model(learning_rate)
         
         model.set_weights(weights)
 
-        model.fit(train_ds, epochs=5, batch_size=64)
+        model.fit(X_train, y_train, epochs=5, batch_size=10)
 
-        return model.evaluate(test_ds)
-      
-      
-        # model.nn.set_weights(weights)
-        # model.nn.compile(optimizer=keras.optimizers.Adam(learning_rate=learning_rate), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-        # 
+        loss, accuracy = model.evaluate(X_test, y_test)
+   
+        return accuracy
+   
+    
    
     @staticmethod
-    def load_data(directory):
-        print("Loading data from: ", directory)
-        (train_ds, test_ds) = tf.keras.utils.image_dataset_from_directory(
-            directory,
-            image_size=(28, 28),
-            seed=123,
-            validation_split=.25,
-            subset='both',
-            color_mode='grayscale',
-        )
-        return train_ds, test_ds
+    def load_data(datasetLocation):
+        names = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome']
+        data = pd.read_csv(datasetLocation, names=names, header=None)
+
+        # Replace missing values (0s) with NaN
+        data = data.replace({'Glucose': {0: np.nan},
+                            'BloodPressure': {0: np.nan},
+                            'SkinThickness': {0: np.nan},
+                            'Insulin': {0: np.nan},
+                            'BMI': {0: np.nan}}).iloc[1:]
+
+        data.dropna(inplace=True)
+
+        numeric_data = data.apply(pd.to_numeric, errors='coerce').dropna()
+
+        X = numeric_data.drop('Outcome', axis=1)
+        y = numeric_data['Outcome']
+
+        scaler = StandardScaler()
+        X_normalized = scaler.fit_transform(X)
+
+        X_train, X_test, y_train, y_test = train_test_split(X_normalized, y, test_size=0.2, random_state=42)
+        
+        return (X_train, y_train), (X_test, y_test)
     
