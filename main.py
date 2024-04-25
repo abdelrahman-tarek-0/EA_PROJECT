@@ -3,6 +3,8 @@ import random
 from src.AI.de_algo import DE
 from src.AI.model import Model
 from src.utils.loaders import load_dataset, load_gene_pool
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 def main():
 
@@ -12,7 +14,7 @@ def main():
         gene_pool=load_gene_pool(),
         crossoverRate=0.5,
         mutateWeight=0.5,
-        num_individuals=3
+        num_individuals=100
     )
 
     best = de.run(5)
