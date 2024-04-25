@@ -1,6 +1,7 @@
 import numpy as np
 from src.classes.Individual import Individual
-
+import time 
+from joblib import Parallel, delayed
 
 def append_to_file(file_name, text):
     with open(f'src/logs/{file_name}.log', 'a') as file:
@@ -20,11 +21,21 @@ class DE:
 
 
     def init_population(self):
+        start = time.time()
         print("Initializing Population")
-        population = []
-        for i in range(self.num_individuals):
-            print(f"Individual {i}")
-            population.append(self.generate_individual())
+
+        def create_individual(i):
+            print(f"Creating individual {i}")
+            return self.generate_individual()
+        
+        # population = []
+        # for i in range(self.num_individuals):
+        #     population.append(create_individual(i))
+
+        population = Parallel(n_jobs=-1)(delayed(create_individual)(i) for i in range(self.num_individuals))
+
+        end = time.time()
+        print(f"Time taken to initialize population: {end - start} seconds")
 
         return population
 
@@ -46,16 +57,18 @@ class DE:
        
     def survive(self, target, trail_gene):
         trail_gene_fitness = self.fitness_function(trail_gene, self.data)
-        # print(f"Trail Gene Fitness: {trail_gene_fitness}")
+        print(f"Trail Gene Fitness: {trail_gene_fitness}")
+
+        new_individual = None
         append_to_file("trail_ind", f"{trail_gene_fitness}\n")
 
         if trail_gene_fitness > target.Fitness:
             append_to_file("serv_ind", f"Individual Fitness: {target.Fitness} is less than Trail Gene Fitness: {trail_gene_fitness}\n")
-        
-            target.setGenes(trail_gene)
-            target.setFitness(trail_gene_fitness)
+            new_individual = Individual(trail_gene, trail_gene_fitness)
+        else:
+            new_individual = target
 
-        return target
+        return new_individual
 
 
     def selection(self, i):
@@ -93,22 +106,49 @@ class DE:
             append_to_file("normal_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
 
             print(f"\n+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++")
-            
-            bestInGeneration = self.get_best_individual()
+        
+            new_population = []
+
+            # start = time.time()
+            # for i in range(len(self.population)):
+            #     target, r1, r2, r3 = self.selection(i)
+            #     mutated = self.mutation(r1, r2, r3)
+            #     trail_gene = self.crossover(target, mutated)
+
+            #     print(f"Individual {i} Fitness: {target.Fitness}")
+            #     append_to_file("normal_ind", f"{target.Fitness}\n")
+
+            #     new_individual = self.survive(target, trail_gene)
+            #     new_population.append(new_individual)
 
 
-            for i in range(len(self.population)):
+            #     append_to_file("pop_ind", f"{self.population[i].Fitness}\n")
+
+            # end = time.time()
+
+            start = time.time()
+            def opt(i): 
                 target, r1, r2, r3 = self.selection(i)
                 mutated = self.mutation(r1, r2, r3)
                 trail_gene = self.crossover(target, mutated)
 
                 print(f"Individual {i} Fitness: {target.Fitness}")
-                append_to_file("normal_ind", f"{target.Fitness}\n")
+                # append_to_file("normal_ind", f"{target.Fitness}\n")
 
-                self.population[i] = self.survive(target, trail_gene) 
+                new_individual = self.survive(target, trail_gene)
+
+                # append_to_file("pop_ind", f"{new_individual.Fitness}\n")
+
+                return new_individual
 
 
-                append_to_file("pop_ind", f"{self.population[i].Fitness}\n")
+            new_population = Parallel(n_jobs=-1)(delayed(opt)(i) for i in range(len(self.population)))
+            end = time.time()   
+
+            print(f"Time taken to run generation {j}: {end - start} seconds")
+
+            bestInGeneration = self.get_best_individual()
+            self.population = new_population # generational model
 
             print(f"Best in Generation {j} Fitness: {bestInGeneration.Fitness}\n")
        
