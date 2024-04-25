@@ -5,15 +5,21 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
 
+
 class Model:
     @staticmethod  
     def create_model(learning_rate):
         model = tf.keras.models.Sequential([
-            tf.keras.layers.Dense(8, activation='relu', input_dim=8),
+            tf.keras.layers.Dense(12, activation='relu', input_dim=8),
             tf.keras.layers.Dense(8, activation='relu'),
             tf.keras.layers.Dense(1, activation='sigmoid')
         ])
         model.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=learning_rate), metrics=['accuracy'])
+
+        # shapes = [w.shape for w in model.get_weights()]
+        # weights = np.concatenate([w.flatten() for w in model.get_weights()])
+
+        # print(f"Model created with learning rate: {shapes} and weights: {weights.shape}")
 
         return model
 
@@ -22,8 +28,8 @@ class Model:
     @staticmethod
     def prepare_weights(weights):
 
-        flattened_weights = np.array(weights) # الأوزان لزمن طبقة نم باي اراي وطوله 153
-        shapes = [(8, 8), (8,), (8, 8), (8,), (8, 1), (1,)] # شكل النيورنات في كل طبقة
+        flattened_weights = np.array(weights) # الأوزان لزمن طبقة نم باي اراي وطوله 222
+        shapes = [(8, 12), (12,), (12, 8), (8,), (8, 1), (1,)] # شكل النيورنات في كل طبقة
 
         reshaped_weights = []
         start_idx = 0
@@ -48,9 +54,9 @@ class Model:
         
         model.set_weights(weights)
 
-        model.fit(X_train, y_train, epochs=5, batch_size=10)
+        model.fit(X_train, y_train, epochs=5, batch_size=10, verbose=0)
 
-        loss, accuracy = model.evaluate(X_test, y_test)
+        loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
    
         return accuracy
    

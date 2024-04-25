@@ -1,43 +1,124 @@
+import concurrent.futures
 import numpy as np
+from classes.Individual import Individual
 
+
+def append_to_file(file_name, text):
+    # Open the file in append mode ('a' flag), creating it if it doesn't exist
+    with open(file_name, 'a') as file:
+        # Write the text to the end of the file
+        file.write(text)
 
 class DE:
-    def __init__(self, pop_size, dim, max_iter, f, cr, bounds, target, func):
-        self.pop_size = pop_size
-        self.dim = dim
-        self.max_iter = max_iter
-        self.f = f
-        self.cr = cr
-        self.bounds = bounds
-        self.target = target
-        self.func = func
+    def __init__(self, *, data=[], fitness_function=None, gene_weights_pool=None, gene_learning_rate_pool=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7):
+        self.data = data
+        self.fitness_function = fitness_function
+        self.gene_weights_pool = gene_weights_pool
+        self.gene_learning_rate_pool = gene_learning_rate_pool
+        self.num_individuals = num_individuals
+        self.mutateWeight = mutateWeight
+        self.crossoverRate = crossoverRate
+
+        self.population = self.init_population()
+
 
     def init_population(self):
-        return np.random.uniform(self.bounds[0], self.bounds[1], (self.pop_size, self.dim))
+        print("Initializing Population")
+        population = []
+        for i in range(self.num_individuals):
+            print(f"Individual {i}")
+            population.append(self.generate_individual())
 
-    def mutation(self, population, i):
-        idxs = [idx for idx in range(self.pop_size) if idx != i]
-        a, b, c = population[np.random.choice(idxs, 3, replace=False)]
-        return np.clip(a + self.f * (b - c), self.bounds[0], self.bounds[1])
+        return population
 
-    def crossover(self, target, mutant):
-        crossover = np.random.rand(self.dim) < self.cr
-        crossover[np.random.randint(self.dim)] = True
-        return np.where(crossover, mutant, target)
+    
+    
+    def mutation (self, r1, r2, r3):
+        mutated  = r3.Genes + self.mutateWeight*(r1.Genes - r2.Genes)
+        return np.clip(mutated, -1, 1)
 
-    def selection(self, target, mutant):
-        return mutant if self.func(mutant) < self.func(target) else target
+    def crossover(self, target, mutated):
+        trail_gene = []
+        for i in range(len(target.Genes)):
+            if np.random.rand() < self.crossoverRate:
+                trail_gene.append(mutated[i])
+            else:
+                trail_gene.append(target.Genes[i])
 
-    def run(self):
-        population = self.init_population()
-        for i in range(self.max_iter):
-            new_population = np.zeros((self.pop_size, self.dim))
-            for j in range(self.pop_size):
-                mutant = self.mutation(population, j)
-                trial = self.crossover(population[j], mutant)
-                new_population[j] = self.selection(population[j], trial)
-            population = new_population
-        return population[np.argmin([self.func(ind) for ind in population])]
+        return trail_gene
+       
+    def survive(self, target, trail_gene):
+        trail_gene_fitness = self.fitness_function(trail_gene, self.data)
+        # print(f"Trail Gene Fitness: {trail_gene_fitness}")
+        append_to_file("trail_ind", f"{trail_gene_fitness}\n")
+
+        if trail_gene_fitness > target.Fitness:
+            append_to_file("serv_ind", f"Individual Fitness: {target.Fitness} is less than Trail Gene Fitness: {trail_gene_fitness}\n")
+        
+            target.setGenes(trail_gene)
+            target.setFitness(trail_gene_fitness)
+
+        return target
+
+
+    def selection(self, i):
+        target = self.population[i]
+        r1, r2, r3 = np.random.choice(self.population, 3, replace=False) 
+
+        return target, r1, r2, r3
+    
+    def get_best_individual(self):
+        best = None
+
+        for ind in self.population:
+            if best is None or ind.Fitness > best.Fitness:
+                best = ind
+
+        return best
+
+
+    def generate_individual(self):
+        genes = np.random.choice(self.gene_weights_pool, 221).tolist()
+        genes.append(np.random.choice(self.gene_learning_rate_pool))
+        fitness = self.fitness_function(genes, self.data)
+
+        return Individual(genes, fitness)
+    
+    def run(self, generations=100):
+        print("Running DE")
+        for j in range(generations):
+
+            append_to_file("pop_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
+            append_to_file("trail_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
+            append_to_file("serv_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
+            append_to_file("normal_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
+
+            print(f"\n+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++")
+            
+            bestInGeneration = self.get_best_individual()
+
+
+            for i in range(len(self.population)):
+                target, r1, r2, r3 = self.selection(i)
+                mutated = self.mutation(r1, r2, r3)
+                trail_gene = self.crossover(target, mutated)
+
+                print(f"Individual {i} Fitness: {target.Fitness}")
+                append_to_file("normal_ind", f"{target.Fitness}\n")
+
+                self.population[i] = self.survive(target, trail_gene) 
+
+
+                append_to_file("pop_ind", f"{self.population[i].Fitness}\n")
+
+            print(f"Best in Generation {j} Fitness: {bestInGeneration.Fitness}\n")
+       
+
+        
+
+        return self.get_best_individual()
+
+
     
 # export DE_ALGO
 
