@@ -60,7 +60,9 @@ class DE:
 
     def selection(self, i):
         target = self.population[i]
-        r1, r2, r3 = np.random.choice(self.population, 3, replace=False) 
+        populationWithoutTarget = self.population[:i] + self.population[i+1:]
+        
+        r1, r2, r3 = np.random.choice(populationWithoutTarget, 3, replace=False) 
 
         return target, r1, r2, r3
     
