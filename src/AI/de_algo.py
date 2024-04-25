@@ -1,20 +1,17 @@
-import concurrent.futures
 import numpy as np
-from classes.Individual import Individual
+from src.classes.Individual import Individual
 
 
 def append_to_file(file_name, text):
-    # Open the file in append mode ('a' flag), creating it if it doesn't exist
-    with open(file_name, 'a') as file:
-        # Write the text to the end of the file
+    with open(f'src/logs/{file_name}.log', 'a') as file:
         file.write(text)
 
 class DE:
-    def __init__(self, *, data=[], fitness_function=None, gene_weights_pool=None, gene_learning_rate_pool=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7):
+    def __init__(self, *, data=[], fitness_function=None, gene_pool=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7):
         self.data = data
         self.fitness_function = fitness_function
-        self.gene_weights_pool = gene_weights_pool
-        self.gene_learning_rate_pool = gene_learning_rate_pool
+        self.gene_weights_pool = gene_pool[0]
+        self.gene_learning_rate_pool = gene_pool[1]
         self.num_individuals = num_individuals
         self.mutateWeight = mutateWeight
         self.crossoverRate = crossoverRate

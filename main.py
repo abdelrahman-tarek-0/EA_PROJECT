@@ -1,23 +1,19 @@
-from model import Model
 import numpy as np
 import random
-from de_algo import DE
+from src.AI.de_algo import DE
+from src.AI.model import Model
+from src.utils.loaders import load_dataset, load_gene_pool
 
 def main():
-    data = Model.load_data("./dataset/diabetes.csv")
-    gene_weights_pool = np.load("./dataset/gene_weights_pool.npy")
-    gene_learning_rate_pool = np.load("./dataset/gene_learning_rate_pool.npy")
-    fitness_function = Model.fitness_function
 
-
+    
     de = DE(
-        data=data,
-        fitness_function=fitness_function,
-        gene_weights_pool=gene_weights_pool,
-        gene_learning_rate_pool=gene_learning_rate_pool,
+        data=load_dataset(),
+        fitness_function=Model.fitness_function,
+        gene_pool=load_gene_pool(),
         crossoverRate=0.5,
         mutateWeight=0.5,
-        num_individuals=30
+        num_individuals=3
     )
 
     best = de.run(5)
