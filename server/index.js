@@ -27,6 +27,16 @@ io.on('connection', (socket) => {
       })
 })
 
+app.get('/', (req, res) => {
+   res.sendFile(path.join(__dirname, 'public', 'pages', 'main', 'index.html'))
+})
+app.get('/start', (req, res) => {
+   res.sendFile(path.join(__dirname, 'public', 'pages', 'start', 'start.html'))
+})
+app.get('/reports', (req, res) => {
+   res.sendFile(path.join(__dirname, 'public', 'pages', 'reports', 'reports.html'))
+})
+
 app.get('/health', (req, res) => {
    res.send("Ok")
 })
