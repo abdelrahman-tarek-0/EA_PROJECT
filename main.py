@@ -11,6 +11,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 app = Flask(__name__)
 
 node_backend = 'http://localhost:8001'
+is_running = False
 
 def send_report(report):
     requests.post(f'{node_backend}/reports', json=report)
@@ -25,6 +26,7 @@ def check_node():
 
 
 def main():
+    is_running = True
     de = DE(
         data=load_dataset(),
         fitness_function=Model.fitness_function,
@@ -51,7 +53,11 @@ def main():
 
 @app.route('/run/', methods=['GET', 'POST'])
 def run():
+    if is_running:
+        return 'Algorithm is already running'
+    
     best_fitness = main()
+    is_running = False
     return f'Best Fitness: {best_fitness}'
     
 if __name__ == '__main__':
