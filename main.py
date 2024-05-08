@@ -1,3 +1,5 @@
+from flask import Flask
+import requests
 import numpy as np
 import random
 from src.AI.de_algo import DE
@@ -6,18 +8,34 @@ from src.utils.loaders import load_dataset, load_gene_pool
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-def main():
+app = Flask(__name__)
 
+node_backend = 'http://localhost:8001'
+
+def send_report(report):
+    requests.post(f'{node_backend}/reports', json=report)
+
+def check_node():
+    try:
+        requests.get(node_backend)
+    except requests.exceptions.ConnectionError:
+        return False
+    return True
+
+
+
+def main():
     de = DE(
         data=load_dataset(),
         fitness_function=Model.fitness_function,
         gene_pool=load_gene_pool(),
         crossoverRate=0.5,
         mutateWeight=0.5,
-        num_individuals=100
+        num_individuals=100,
+        send_report=send_report
     )
 
-    best = de.run(5)
+    best = de.run(3)
 
     print(f'Best Fitness: {best.Fitness}')
     print(f'Best Genes: {best.Genes}')
@@ -28,6 +46,21 @@ def main():
     # save the model
     best_model.save('./dataset/best_model.h5')
 
+    return best.Fitness
+
+
+@app.route('/run/', methods=['GET', 'POST'])
+def run():
+    best_fitness = main()
+    return f'Best Fitness: {best_fitness}'
     
 if __name__ == '__main__':
-    main()
+
+    is_node_up = check_node()
+
+    if not is_node_up:
+        print('Node report server is not up')
+        exit()
+
+    print('Node report server is up')
+    app.run(host='0.0.0.0', port=8000)
