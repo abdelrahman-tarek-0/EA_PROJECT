@@ -11,6 +11,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
 
+let reports = []
+
 const server = require('http').createServer(app)
 
 const io = new Server(server, {
@@ -41,8 +43,21 @@ app.get('/health', (req, res) => {
    res.send("Ok")
 })
 
+app.get('/api/reports', (req, res) => {
+   res.send(reports)
+})
+
 app.post('/reports', (req, res) => {
-    io.emit('report', req.body) 
+   const data = req.body
+   if (data?.command === 'start') {
+      reports = [{
+         message: 'Started',
+      }]
+      io.emit('report', { message: 'Started' })
+   }else{
+      reports.push(data)
+      io.emit('report', data)
+   }
     res.send('Report received')
 })
 

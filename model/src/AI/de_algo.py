@@ -8,7 +8,7 @@ def append_to_file(file_name, text):
         file.write(text)
 
 class DE:
-    def __init__(self, *, data=[], fitness_function=None, gene_pool=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None):
+    def __init__(self, *, data=[], fitness_function=None, gene_pool=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5):
         self.data = data
         self.fitness_function = fitness_function
         self.gene_weights_pool = gene_pool[0]
@@ -17,6 +17,7 @@ class DE:
         self.mutateWeight = mutateWeight
         self.crossoverRate = crossoverRate
         self.send_report = send_report
+        self.epochs = epochs
 
         self.population = self.init_population()
 
@@ -42,11 +43,9 @@ class DE:
 
         return population
 
-    
-    
     def mutation (self, r1, r2, r3):
         mutated  = r3.Genes + self.mutateWeight*(r1.Genes - r2.Genes)
-        self.send_report({"fitness": self.fitness_function(mutated, self.data), "id": "mutated"})
+        self.send_report({"fitness": self.fitness_function(mutated, self.data, self.epochs), "id": "mutated"})
 
         return np.clip(mutated, -1, 1)
 
@@ -58,11 +57,11 @@ class DE:
             else:
                 trail_gene.append(target.Genes[i])
 
-        self.send_report({"fitness": self.fitness_function(trail_gene, self.data), "id": "trail_gene"})
+        self.send_report({"fitness": self.fitness_function(trail_gene, self.data, self.epochs), "id": "trail_gene"})
         return trail_gene
        
     def survive(self, target, trail_gene):
-        trail_gene_fitness = self.fitness_function(trail_gene, self.data)
+        trail_gene_fitness = self.fitness_function(trail_gene, self.data,  self.epochs)
         print(f"Trail Gene Fitness: {trail_gene_fitness}")
 
         new_individual = None
@@ -100,13 +99,16 @@ class DE:
     def generate_individual(self):
         genes = np.random.choice(self.gene_weights_pool, 221).tolist()
         genes.append(np.random.choice(self.gene_learning_rate_pool))
-        fitness = self.fitness_function(genes, self.data)
+        fitness = self.fitness_function(genes, self.data,  self.epochs)
 
         return Individual(genes, fitness)
     
     def run(self, generations=100):
         print("Running DE")
-        self.send_report({"fitness": self.get_best_individual().Fitness, "id": "initial", "message": "Initial DE"})
+        self.send_report({
+            "fitness": self.get_best_individual().Fitness, "id": "initial", "message": "Initial DE", "epochs": self.epochs,
+            "num_individuals": self.num_individuals, "mutateWeight": self.mutateWeight, "crossoverRate": self.crossoverRate
+            })
         for j in range(generations):
 
             append_to_file("pop_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")

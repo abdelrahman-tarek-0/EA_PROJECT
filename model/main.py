@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 import requests
 import numpy as np
@@ -28,17 +28,24 @@ def check_node():
 
 
 
-def main():
+def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5):
     global is_running
     is_running = True
+
+    send_report({
+        "command": "start",
+        'message': 'Algorithm started',
+    })
+    
     de = DE(
         data=load_dataset(),
         fitness_function=Model.fitness_function,
         gene_pool=load_gene_pool(),
-        crossoverRate=0.5,
-        mutateWeight=0.5,
-        num_individuals=100,
-        send_report=send_report
+        crossoverRate=crossoverRate,
+        mutateWeight=mutateWeight,
+        num_individuals=num_individuals,
+        send_report=send_report,
+        epochs=epochs,
     )
 
     best = de.run(3)
@@ -55,14 +62,26 @@ def main():
     return best.Fitness
 
 
-@app.route('/run/', methods=['GET', 'POST'])
+@app.route('/run/', methods=['POST'])
 def run():
     global is_running
     
     if is_running:
         return 'Algorithm is already running'
     
-    best_fitness = main()
+    data = request.json
+
+    epochs = data.get('epochs', 5)
+    num_individuals = data.get('num_individuals', 100)
+    mutateWeight = data.get('mutateWeight', 0.5)
+    crossoverRate = data.get('crossoverRate', 0.5)
+    
+    best_fitness = main(
+        epochs=epochs,
+        num_individuals=num_individuals,
+        mutateWeight=mutateWeight,
+        crossoverRate=crossoverRate
+    )
 
     is_running = False
 

@@ -31,7 +31,7 @@ class Model:
         return reshaped_weights
 
     @staticmethod
-    def fitness_function(weights, data):      
+    def fitness_function(weights, data, epochs=5):      
         (X_train, y_train), (X_test, y_test) = data
 
         learning_rate = weights[-1]
@@ -42,7 +42,7 @@ class Model:
         
         model.set_weights(weights)
 
-        model.fit(X_train, y_train, epochs=5, batch_size=10, verbose=0)
+        model.fit(X_train, y_train, epochs=epochs, batch_size=10, verbose=0)
 
         loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
    
