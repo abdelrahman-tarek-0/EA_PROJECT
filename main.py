@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS, cross_origin
 import requests
 import numpy as np
 import random
@@ -9,8 +10,10 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 app = Flask(__name__)
+CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
-node_backend = 'http://localhost:8001'
+node_backend = 'http://127.0.0.1:8001'
 is_running = False
 
 def send_report(report):
@@ -18,7 +21,7 @@ def send_report(report):
 
 def check_node():
     try:
-        requests.get(node_backend)
+        requests.get(f'{node_backend}/health')
     except requests.exceptions.ConnectionError:
         return False
     return True
@@ -26,6 +29,7 @@ def check_node():
 
 
 def main():
+    global is_running
     is_running = True
     de = DE(
         data=load_dataset(),
@@ -53,13 +57,22 @@ def main():
 
 @app.route('/run/', methods=['GET', 'POST'])
 def run():
+    global is_running
+    
     if is_running:
         return 'Algorithm is already running'
     
     best_fitness = main()
+
     is_running = False
+
     return f'Best Fitness: {best_fitness}'
-    
+
+@app.route('/status', methods=['GET'])
+def status():
+    global is_running
+    return 'Running' if is_running else 'Idle'
+
 if __name__ == '__main__':
 
     is_node_up = check_node()
