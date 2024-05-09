@@ -8,7 +8,7 @@ def append_to_file(file_name, text):
         file.write(text)
 
 class DE:
-    def __init__(self, *, data=[], fitness_function=None, gene_pool=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5):
+    def __init__(self, *, data=[], fitness_function=None, gene_pool=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100):
         self.data = data
         self.fitness_function = fitness_function
         self.gene_weights_pool = gene_pool[0]
@@ -18,6 +18,19 @@ class DE:
         self.crossoverRate = crossoverRate
         self.send_report = send_report
         self.epochs = epochs
+        self.generations = generations
+
+        self.send_report({
+            "command": "start",
+            'message': 'Algorithm started',
+            "data": {
+                "num_individuals": self.num_individuals,
+                "mutateWeight": self.mutateWeight,
+                "crossoverRate": self.crossoverRate,
+                "epochs": self.epochs,
+                "generations": self.generations
+            }
+        })
 
         self.population = self.init_population()
 
@@ -29,7 +42,14 @@ class DE:
         def create_individual(i):
             print(f"Creating individual {i}")
             ind = self.generate_individual()
-            self.send_report({"fitness": ind.Fitness, "id": i})
+            self.send_report({
+                "command": "create_individual",
+                "individual": {
+                    "id": i,
+                    "fitness": ind.Fitness,
+                    "genes": ind.Genes.tolist(),
+                },
+            })
             return ind
         
         # population = []
@@ -103,13 +123,10 @@ class DE:
 
         return Individual(genes, fitness)
     
-    def run(self, generations=100):
+    def run(self):
         print("Running DE")
-        self.send_report({
-            "fitness": self.get_best_individual().Fitness, "id": "initial", "message": "Initial DE", "epochs": self.epochs,
-            "num_individuals": self.num_individuals, "mutateWeight": self.mutateWeight, "crossoverRate": self.crossoverRate
-            })
-        for j in range(generations):
+     
+        for j in range(self.generations):
 
             append_to_file("pop_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
             append_to_file("trail_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
@@ -118,47 +135,52 @@ class DE:
 
             print(f"\n+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++")
 
-            self.send_report({"fitness": self.get_best_individual().Fitness, "id": j, "message": f"Generation {j}"})
+            self.send_report({
+                "command": "generation_started",
+                "generation": j,
+                "best_fitness": self.get_best_individual().Fitness,
+                "message": f"Running Generation {j}"
+            })
         
             new_population = []
 
-            # start = time.time()
-            # for i in range(len(self.population)):
-            #     target, r1, r2, r3 = self.selection(i)
-            #     mutated = self.mutation(r1, r2, r3)
-            #     trail_gene = self.crossover(target, mutated)
-
-            #     print(f"Individual {i} Fitness: {target.Fitness}")
-            #     append_to_file("normal_ind", f"{target.Fitness}\n")
-
-            #     new_individual = self.survive(target, trail_gene)
-            #     new_population.append(new_individual)
-
-
-            #     append_to_file("pop_ind", f"{self.population[i].Fitness}\n")
-
-            # end = time.time()
-
             start = time.time()
-            def opt(i): 
+            for i in range(len(self.population)):
                 target, r1, r2, r3 = self.selection(i)
                 mutated = self.mutation(r1, r2, r3)
                 trail_gene = self.crossover(target, mutated)
 
                 print(f"Individual {i} Fitness: {target.Fitness}")
-
-                self.send_report({"fitness": target.Fitness, "id": i})
-                # append_to_file("normal_ind", f"{target.Fitness}\n")
+                append_to_file("normal_ind", f"{target.Fitness}\n")
 
                 new_individual = self.survive(target, trail_gene)
-
-                # append_to_file("pop_ind", f"{new_individual.Fitness}\n")
-
-                return new_individual
+                new_population.append(new_individual)
 
 
-            new_population = Parallel(n_jobs=-1)(delayed(opt)(i) for i in range(len(self.population)))
-            end = time.time()   
+                append_to_file("pop_ind", f"{self.population[i].Fitness}\n")
+
+            end = time.time()
+
+            # start = time.time()
+            # def opt(i): 
+            #     target, r1, r2, r3 = self.selection(i)
+            #     mutated = self.mutation(r1, r2, r3)
+            #     trail_gene = self.crossover(target, mutated)
+
+            #     print(f"Individual {i} Fitness: {target.Fitness}")
+
+            #     self.send_report({"fitness": target.Fitness, "id": i})
+            #     # append_to_file("normal_ind", f"{target.Fitness}\n")
+
+            #     new_individual = self.survive(target, trail_gene)
+
+            #     # append_to_file("pop_ind", f"{new_individual.Fitness}\n")
+
+            #     return new_individual
+
+
+            # new_population = Parallel(n_jobs=-1)(delayed(opt)(i) for i in range(len(self.population)))
+            # end = time.time()   
 
             print(f"Time taken to run generation {j}: {end - start} seconds")
 
@@ -170,9 +192,14 @@ class DE:
             print(f"Best in Generation {j} Fitness: {bestInGeneration.Fitness}\n")
        
 
-        
+        self.send_report({"command": "finish", "message": "Algorithm finished"})
 
         return self.get_best_individual()
+    
+    # def stop(self):
+
+
+    
 
 
     

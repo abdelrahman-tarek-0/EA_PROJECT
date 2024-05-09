@@ -2,6 +2,7 @@ const path = require('path')
 const express = require('express')
 const {Server} = require('socket.io')
 const cors = require('cors')
+const open = require('open')
 
 const app = express()
 
@@ -11,7 +12,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static(path.join(__dirname, 'public')))
 
-let reports = []
+let currentReports = []
+let reports = {}
 
 const server = require('http').createServer(app)
 
@@ -44,23 +46,52 @@ app.get('/health', (req, res) => {
 })
 
 app.get('/api/reports', (req, res) => {
-   res.send(reports)
+   res.json(currentReports)
+})
+app.get('/api/reports/list', (req, res) => {
+   const keys = Object.keys(reports)
+   const data = keys.map(key => {
+      return {
+         id: key,
+         timestamp: reports[key].timestamp,
+      }
+   })
+   res.json(data)
+})
+app.get('/api/reports/:id', (req, res) => {
+   const { id } = req.params
+   res.json(reports[id])
 })
 
 app.post('/reports', (req, res) => {
    const data = req.body
    if (data?.command === 'start') {
-      reports = [{
-         message: 'Started',
+      currentReports = [{
+         ...data,
       }]
-      io.emit('report', { message: 'Started' })
-   }else{
-      reports.push(data)
-      io.emit('report', data)
+   } else if(data?.command === 'finish') {
+      currentReports.push({
+         ...data,
+      })
+      const id = `${Date.now()}`
+
+      reports[id] = {
+         data: currentReports,
+         id: id,
+         timestamp: Date.now(),
+      }
    }
+   else{
+      currentReports.push(data)
+   }
+    io.emit('report', {
+      ...data,
+      reportsSaved: currentReports.length,
+    })
     res.send('Report received')
 })
 
 server.listen(8001, () => {
+   open('http://127.0.0.1:8001')
    console.log('Server is running on port http://127.0.0.1:8001')
 })

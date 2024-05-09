@@ -16,6 +16,8 @@ const checkBackStatus = async () => {
    }
 }
 
+checkBackStatus()
+
 const startModel = async (data) => {
    try {
       fetch(`${modelUrl}/run/`, {
