@@ -1,14 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report</title>
-</head>
-<body>
-    <h1>Report</h1>
-    <ul id="reports"></ul>
-</body>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
-<script src="pages/reports/reports.js"></script>
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link href="http://127.0.0.1:8001/assets/fontawesome/all.min.css" type="text/css" rel="stylesheet">
+      <link rel="stylesheet" type="text/css" href="http://127.0.0.1:8001/assets/toastify/all.css">
+      <script type="text/javascript" src="http://127.0.0.1:8001/assets/toastify/main.js"></script>
+      <style>
+         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+         }
+         #current_generation {
+            display: block;
+            width: 1000px;
+            height: 50px;
+            margin: 10px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            text-align: center; /* Centers the text */
+            font-size: 20px; /* Makes the text bigger */
+            font-weight: bold; /* Makes the text bold */
+            color: #333; /* Changes the text color */
+         }
+         #population_space {
+            display: block;
+            width: 1000px;
+            height: 500px;
+            margin: 20px auto;
+            padding: 30px;
+            background-color: #fff;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd; /* Softer border color */
+            border-radius: 10px; /* Rounded corners */
+            position: relative;
+         }
+
+         #individual {
+            color: red;
+         }
+      </style>
+      <title>Report</title>
+   </head>
+   <body>
+      <div id="current_generation"></div>
+      <div id="population_space"></div>
+      <h1>Report</h1>
+      <ul id="reports"></ul>
+   </body>
+   <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+      crossorigin="anonymous"
+   ></script>
+   <script src="pages/reports/reports.js"></script>
 </html>
