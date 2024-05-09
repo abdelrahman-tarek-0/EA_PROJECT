@@ -13,12 +13,45 @@
         }
 
         form {
-            width: 50%;
+            width: 75%;
             margin: 0 auto;
             padding: 20px;
             background-color: #fff;
             box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
         }
+        .sections-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .section {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 45%;
+        }
+        .input-comp {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            /* don't make the text break to next line*/
+            white-space: nowrap;
+        }
+
+        #Visualize-NN-section{
+            width: 75%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            /* display: none; */
+        }
+
 
         input, button, h1 {
             display: block;
@@ -26,12 +59,22 @@
             text-align: center;
         }
 
-        input {
+        input,select  {
             padding: 10px;
-            margin: 10px 0;
+            margin: 10px;
             border-radius: 5px;
             border: 1px solid #ddd;
         }
+
+        label{
+            margin-right: 10px;
+        }
+
+        img{
+            width: 100%;
+            height: auto;
+        }
+
 
         button {
             padding: 10px 20px;
@@ -42,8 +85,16 @@
             cursor: pointer;
         }
 
+        #Visualize-NN-btn{
+            background-color: #28a745;
+
+        }
+
         button:hover {
             background-color: #0056b3;
+        }
+        #Visualize-NN-btn:hover {
+            background-color: #218838;
         }
     </style>
     <title>Report</title>
@@ -51,24 +102,69 @@
 <body>
     <h1>Start</h1>
     <form action="" id="start_form">
-        <label for="num_individuals">The Number of Individuals</label>
-        <input type="number" id="num_individuals" name="num_individuals" min="4" required value="15">
+        <section class="sections-container">
+            <section id="start-algorithm" class="section">
+                <h3>Edit algorithm</h3>
+                <label for="num_individuals">The Number of Individuals</label>
+                <input type="number" id="num_individuals" name="num_individuals" min="4" required value="15">
+    
+                <label for="num_generations">The Number of Generations</label>
+                <input type="number" id="num_generations" name="num_generations" min="1" required value="4">
+                
+                <label for="epochs">epochs</label>
+                <input type="number" id="epochs" name="epochs" min="1" required value="5">
+    
+                <label for="mutateWeight">mutate weight</label>
+                <input type="number" id="mutateWeight" name="mutateWeight" step="0.1" min="0" max="1" required value="0.5">
+                
+                <label for="crossoverRate">crossover rate</label>
+                <input type="number" id="crossoverRate" name="crossoverRate" step="0.1" min="0" max="1" required value="0.5">
+           </section>
+            <section id="nn-algorithm" class="section">
+                <h3>Edit the NN of the Individual</h3>
 
-        <label for="num_generations">The Number of Generations</label>
-        <input type="number" id="num_generations" name="num_generations" min="1" required value="4">
-        
-        <label for="epochs">epochs</label>
-        <input type="number" id="epochs" name="epochs" min="1" required value="5">
+                <div>
+                    <h4>Layer 1</h4>
+                    <div class="input-comp">
+                        <label for="nn-layer-1">Number of neurons: </label>
+                        <input class="nn-layers" type="number" id="nn-layer-1" name="nn-layer-1" min="1" required value="12">
 
-        <label for="mutateWeight">mutate weight</label>
-        <input type="number" id="mutateWeight" name="mutateWeight" step="0.1" min="0" max="1" required value="0.5">
-        
-        <label for="crossoverRate">crossover rate</label>
-        <input type="number" id="crossoverRate" name="crossoverRate" step="0.1" min="0" max="1" required value="0.5">
-        
+                        <label for="nn-activation-1">Activation Function:</label>
+                        <select name="nn-activation-1" id="nn-activation-1">
+                            <option value="relu">ReLU</option>
+                            <option value="sigmoid">Sigmoid</option>
+                            <option value="tanh">Tanh</option>
+                            <option value="linear">Linear</option>
+                          </select>
+                    </div>
+                </div>
+
+                <div>
+                    <h4>Layer 2</h4>
+                    <div class="input-comp">
+                        <label for="nn-layer-2">Number of neurons: </label>
+                        <input class="nn-layers" type="number" id="nn-layer-2" name="nn-layer-2" min="1" required value="8">
+
+                        <label for="nn-activation-2">Activation Function:</label>
+                        <select name="nn-activation-2" id="nn-activation-2">
+                            <option value="relu">ReLU</option>
+                            <option value="sigmoid">Sigmoid</option>
+                            <option value="tanh">Tanh</option>
+                            <option value="linear">Linear</option>
+                          </select>
+                    </div>
+                </div>
+
+                <button type="button" id="add-layer" style="margin-bottom: 10px;">Add Layer</button>
+                <button type="button" id="Visualize-NN-btn" style="margin-bottom: 10px;">Visualize NN</button>
+            </section>
+        </section>
         <button type="submit" id="btn-sub">Start</button>
     </form>
+    <section id="Visualize-NN-section">
+        <h2>Visualized</h2>
+
+    </section>
+    <script src="pages/start/start.js"></script>
 </body>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
-<script src="pages/start/start.js"></script>
 </html>

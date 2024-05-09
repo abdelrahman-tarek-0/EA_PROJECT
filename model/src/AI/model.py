@@ -1,7 +1,13 @@
+import os
 from keras_visualizer import visualizer
 import tensorflow as tf
 import numpy as np
 from tensorflow import keras
+
+from keras.models import Sequential
+from keras.layers import Dense
+
+
 
 
 class Model:
@@ -14,6 +20,21 @@ class Model:
         ])
         
         model.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=learning_rate), metrics=['accuracy'])
+        return model
+    
+    def build_dynamic_model(learning_rate, layers):
+        model = Sequential()
+        for i, layer_params in enumerate(layers):
+            if i == 0:
+                # First layer with input_dim specified
+                model.add(Dense(layer_params['n'], activation=layer_params['activation'], input_dim=8))
+            else:
+                model.add(Dense(layer_params['n'], activation=layer_params['activation']))
+
+        model.add(Dense(1, activation='sigmoid'))
+
+        model.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=learning_rate), metrics=['accuracy'])
+
         return model
 
     @staticmethod
@@ -54,6 +75,21 @@ class Model:
    
         return accuracy
    
-    
+    @staticmethod
+    def visualize_model(model, name, moveToLocation):
+        visualizer(
+            file_format='png',
+            model=model,
+            file_name=name,
+        )
+        location = os.path.join(os.getcwd(), f"{name}.png")
+        graphLocation = os.path.join(os.getcwd(), f"{name}")
+        os.remove(graphLocation)
+
+        if moveToLocation:
+            newLocation = os.path.join(moveToLocation, f"{name}.png")
+            os.rename(location, newLocation)
+      
+        return f"{name}.png"
    
     

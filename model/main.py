@@ -1,3 +1,7 @@
+import os
+import time
+os.environ["PATH"] += os.pathsep + 'C:/Graphviz-11.0.0-win64/bin'
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 import requests
@@ -86,6 +90,26 @@ def run():
     is_running = False
 
     return f'Best Fitness: {best_fitness}'
+
+@app.route('/modelInfo/', methods=['POST'])
+def get_model_info ():
+    data = request.json
+
+    layers = data.get('layers', [])
+
+    if len(layers) == 0:
+        return 'No layers provided'
+    
+    model = Model.build_dynamic_model(0.01, layers)
+    shape = Model.getModelShapeList(model)
+    weights = len(np.concatenate([w.flatten() for w in model.get_weights()]).tolist())
+    name = Model.visualize_model(model, f"graph-{round(time.time()*1000)}", "../server/public/uploads")
+
+    return jsonify({
+        'shape': shape,
+        'weights': weights + 1,
+        'image': "/uploads/" + name
+    })
 
 @app.route('/status', methods=['GET'])
 def status():
