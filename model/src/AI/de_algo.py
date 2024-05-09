@@ -8,9 +8,8 @@ def append_to_file(file_name, text):
         file.write(text)
 
 class DE:
-    def __init__(self, *, data=[], fitness_function=None, gene_pool=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100):
+    def __init__(self, *, data=[], gene_pool=None, Model=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100):
         self.data = data
-        self.fitness_function = fitness_function
         self.gene_weights_pool = gene_pool[0]
         self.gene_learning_rate_pool = gene_pool[1]
         self.num_individuals = num_individuals
@@ -19,6 +18,9 @@ class DE:
         self.send_report = send_report
         self.epochs = epochs
         self.generations = generations
+        self.weightsShape = Model.getModelShapeList(Model.create_model(0.01))
+
+        self.fitness_function = lambda genes: Model.fitness_function(genes, self.data, self.weightsShape, self.epochs)
 
         self.send_report({
             "command": "start",
@@ -65,7 +67,7 @@ class DE:
 
     def mutation (self, r1, r2, r3):
         mutated  = r3.Genes + self.mutateWeight*(r1.Genes - r2.Genes)
-        self.send_report({"fitness": self.fitness_function(mutated, self.data, self.epochs), "id": "mutated"})
+        self.send_report({"fitness": self.fitness_function(mutated), "id": "mutated"})
 
         return np.clip(mutated, -1, 1)
 
@@ -77,11 +79,11 @@ class DE:
             else:
                 trail_gene.append(target.Genes[i])
 
-        self.send_report({"fitness": self.fitness_function(trail_gene, self.data, self.epochs), "id": "trail_gene"})
+        self.send_report({"fitness": self.fitness_function(trail_gene), "id": "trail_gene"})
         return trail_gene
        
     def survive(self, target, trail_gene):
-        trail_gene_fitness = self.fitness_function(trail_gene, self.data,  self.epochs)
+        trail_gene_fitness = self.fitness_function(trail_gene)
         print(f"Trail Gene Fitness: {trail_gene_fitness}")
 
         new_individual = None
@@ -119,7 +121,7 @@ class DE:
     def generate_individual(self):
         genes = np.random.choice(self.gene_weights_pool, 221).tolist()
         genes.append(np.random.choice(self.gene_learning_rate_pool))
-        fitness = self.fitness_function(genes, self.data,  self.epochs)
+        fitness = self.fitness_function(genes)
 
         return Individual(genes, fitness)
     

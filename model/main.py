@@ -6,6 +6,7 @@ import random
 from src.AI.de_algo import DE
 from src.AI.model import Model
 from src.utils.loaders import load_dataset, load_gene_pool
+
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -34,7 +35,7 @@ def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5,
 
     de = DE(
         data=load_dataset(),
-        fitness_function=Model.fitness_function,
+        Model=Model,
         gene_pool=load_gene_pool(),
         crossoverRate=crossoverRate,
         mutateWeight=mutateWeight,
@@ -94,6 +95,7 @@ def status():
 if __name__ == '__main__':
 
     is_node_up = check_node()
+    modelCreated = Model.create_model(0.01)
 
     if not is_node_up:
         print('Node report server is not up')
