@@ -20,6 +20,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 node_backend = 'http://127.0.0.1:8001'
 is_running = False
+print(load_gene_pool())
 
 def send_report(report):
     requests.post(f'{node_backend}/reports', json=report)
@@ -33,7 +34,7 @@ def check_node():
 
 
 
-def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5, num_generations=3):
+def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5, num_generations=3, layers=[]):
     global is_running
     is_running = True
 
@@ -46,7 +47,8 @@ def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5,
         num_individuals=num_individuals,
         send_report=send_report,
         epochs=epochs,
-        generations=num_generations
+        generations=num_generations,
+        layers=layers
     )
 
     best = de.run()
@@ -78,13 +80,15 @@ def run():
     num_generations = data.get('num_generations', 3)
     mutateWeight = data.get('mutateWeight', 0.5)
     crossoverRate = data.get('crossoverRate', 0.5)
+    layers = data.get('layers', [])
     
     best_fitness = main(
         epochs=epochs,
         num_individuals=num_individuals,
         mutateWeight=mutateWeight,
         crossoverRate=crossoverRate,
-        num_generations=num_generations
+        num_generations=num_generations,
+        layers=layers
     )
 
     is_running = False
@@ -100,7 +104,7 @@ def get_model_info ():
     if len(layers) == 0:
         return 'No layers provided'
     
-    model = Model.build_dynamic_model(0.01, layers)
+    model = Model.create_model(0.01, layers)
     shape = Model.getModelShapeList(model)
     weights = len(np.concatenate([w.flatten() for w in model.get_weights()]).tolist())
     name = Model.visualize_model(model, f"graph-{round(time.time()*1000)}", "../server/public/uploads")
@@ -119,7 +123,7 @@ def status():
 if __name__ == '__main__':
 
     is_node_up = check_node()
-    modelCreated = Model.create_model(0.01)
+    # modelCreated = Model.create_model(0.01)
 
     if not is_node_up:
         print('Node report server is not up')

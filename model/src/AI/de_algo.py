@@ -8,7 +8,7 @@ def append_to_file(file_name, text):
         file.write(text)
 
 class DE:
-    def __init__(self, *, data=[], gene_pool=None, Model=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100):
+    def __init__(self, *, data=[], gene_pool=None, Model=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100, layers=[]):
         self.data = data
         self.gene_weights_pool = gene_pool[0]
         self.gene_learning_rate_pool = gene_pool[1]
@@ -18,9 +18,11 @@ class DE:
         self.send_report = send_report
         self.epochs = epochs
         self.generations = generations
-        self.weightsShape = Model.getModelShapeList(Model.create_model(0.01))
+        self.layers = layers
+        self.weightsShape = Model.getModelShapeList(Model.create_model(0.01, self.layers))
+        self.weightsListSize = len(np.concatenate([w.flatten() for w in Model.create_model(0.01, self.layers).get_weights()]).tolist())
 
-        self.fitness_function = lambda genes: Model.fitness_function(genes, self.data, self.weightsShape, self.epochs)
+        self.fitness_function = lambda genes: Model.fitness_function(genes, self.data, self.weightsShape, self.layers, self.epochs)
 
         self.send_report({
             "command": "start",
@@ -30,7 +32,9 @@ class DE:
                 "mutateWeight": self.mutateWeight,
                 "crossoverRate": self.crossoverRate,
                 "epochs": self.epochs,
-                "generations": self.generations
+                "generations": self.generations,
+                "layers": self.layers,
+                "weightsLen": self.weightsListSize + 1
             }
         })
 
@@ -43,7 +47,7 @@ class DE:
 
         def create_individual(i):
             print(f"Creating individual {i}")
-            ind = self.generate_individual()
+            ind = self.generate_individual(i)
             self.send_report({
                 "command": "create_individual",
                 "individual": {
@@ -91,7 +95,7 @@ class DE:
 
         if trail_gene_fitness > target.Fitness:
             append_to_file("serv_ind", f"Individual Fitness: {target.Fitness} is less than Trail Gene Fitness: {trail_gene_fitness}\n")
-            new_individual = Individual(trail_gene, trail_gene_fitness)
+            new_individual = Individual(trail_gene, trail_gene_fitness, target.id)
         else:
             new_individual = target
 
@@ -118,12 +122,12 @@ class DE:
         return best
 
 
-    def generate_individual(self):
-        genes = np.random.choice(self.gene_weights_pool, 221).tolist()
+    def generate_individual(self, id):
+        genes = np.random.choice(self.gene_weights_pool, self.weightsListSize).tolist()
         genes.append(np.random.choice(self.gene_learning_rate_pool))
         fitness = self.fitness_function(genes)
 
-        return Individual(genes, fitness)
+        return Individual(genes, fitness, id)
     
     def run(self):
         print("Running DE")
@@ -146,43 +150,43 @@ class DE:
         
             new_population = []
 
-            start = time.time()
-            for i in range(len(self.population)):
-                target, r1, r2, r3 = self.selection(i)
-                mutated = self.mutation(r1, r2, r3)
-                trail_gene = self.crossover(target, mutated)
-
-                print(f"Individual {i} Fitness: {target.Fitness}")
-                append_to_file("normal_ind", f"{target.Fitness}\n")
-
-                new_individual = self.survive(target, trail_gene)
-                new_population.append(new_individual)
-
-
-                append_to_file("pop_ind", f"{self.population[i].Fitness}\n")
-
-            end = time.time()
-
             # start = time.time()
-            # def opt(i): 
+            # for i in range(len(self.population)):
             #     target, r1, r2, r3 = self.selection(i)
             #     mutated = self.mutation(r1, r2, r3)
             #     trail_gene = self.crossover(target, mutated)
 
             #     print(f"Individual {i} Fitness: {target.Fitness}")
-
-            #     self.send_report({"fitness": target.Fitness, "id": i})
-            #     # append_to_file("normal_ind", f"{target.Fitness}\n")
+            #     append_to_file("normal_ind", f"{target.Fitness}\n")
 
             #     new_individual = self.survive(target, trail_gene)
-
-            #     # append_to_file("pop_ind", f"{new_individual.Fitness}\n")
-
-            #     return new_individual
+            #     new_population.append(new_individual)
 
 
-            # new_population = Parallel(n_jobs=-1)(delayed(opt)(i) for i in range(len(self.population)))
-            # end = time.time()   
+            #     append_to_file("pop_ind", f"{self.population[i].Fitness}\n")
+
+            # end = time.time()
+
+            start = time.time()
+            def opt(i): 
+                target, r1, r2, r3 = self.selection(i)
+                mutated = self.mutation(r1, r2, r3)
+                trail_gene = self.crossover(target, mutated)
+
+                print(f"Individual {i} Fitness: {target.Fitness}")
+
+                self.send_report({"fitness": target.Fitness, "id": i})
+                # append_to_file("normal_ind", f"{target.Fitness}\n")
+
+                new_individual = self.survive(target, trail_gene)
+
+                # append_to_file("pop_ind", f"{new_individual.Fitness}\n")
+
+                return new_individual
+
+
+            new_population = Parallel(n_jobs=-1)(delayed(opt)(i) for i in range(len(self.population)))
+            end = time.time()   
 
             print(f"Time taken to run generation {j}: {end - start} seconds")
 

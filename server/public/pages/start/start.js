@@ -98,7 +98,6 @@ addLayerBtn.addEventListener('click', () => {
    div.appendChild(divInput)
 
    section.insertBefore(div, addLayerBtn)
-
 })
 
 visualizeNNBtn.addEventListener('click', async () => {
@@ -117,7 +116,7 @@ visualizeNNBtn.addEventListener('click', async () => {
 
    getModelInfo({
       layers: layers,
-   }).then(data => {
+   }).then((data) => {
       const image = data.image
       const numberOfWeights = data.weights
 
@@ -125,13 +124,11 @@ visualizeNNBtn.addEventListener('click', async () => {
          <p>The length of the individual DNA: ${numberOfWeights} (NN weights + learning rate)</p>
          <img src="${image}" alt="Neural Network"/>
       `
-
-
    })
 })
 
 form.addEventListener('submit', async (e) => {
-   e.preventDefault();
+   e.preventDefault()
    const formData = new FormData(form)
 
    const editAlgorithm = {
@@ -157,12 +154,18 @@ form.addEventListener('submit', async (e) => {
 
    console.log(editAlgorithm)
 
-   getModelInfo({
-      layers: editAlgorithm.layers,
-   }).then(data => {
-      console.log(data)
-   })
-   
+   // getModelInfo({
+   //    layers: editAlgorithm.layers,
+   // }).then((data) => {
+   //    console.log(data)
+   // })
+
+
+   if (!await checkBackStatus()) {
+      return
+   }
+   startModel(editAlgorithm)
+
    // console.log(formData.get('nn-layer-1'))
    // console.log(formData.get('nn-activation-1'))
 
@@ -183,13 +186,9 @@ form.addEventListener('submit', async (e) => {
    //    // }
 
    //    data[key] = Number(values.next().value)
-     
+
    // }
 
    // console.log(data)
 
-   // if (!await checkBackStatus()) {
-   //    return
-   // }
-   // startModel(data)
 })

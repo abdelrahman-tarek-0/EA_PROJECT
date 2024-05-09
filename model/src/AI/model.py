@@ -11,18 +11,19 @@ from keras.layers import Dense
 
 
 class Model:
-    @staticmethod  
-    def create_model(learning_rate):
-        model = tf.keras.models.Sequential([
-            tf.keras.layers.Dense(12, activation='relu', input_dim=8),
-            tf.keras.layers.Dense(8, activation='relu'),
-            tf.keras.layers.Dense(1, activation='sigmoid')
-        ])
+    # @staticmethod  
+    # def create_model(learning_rate):
+    #     model = tf.keras.models.Sequential([
+    #         tf.keras.layers.Dense(12, activation='relu', input_dim=8),
+    #         tf.keras.layers.Dense(8, activation='relu'),
+    #         tf.keras.layers.Dense(1, activation='sigmoid')
+    #     ])
         
-        model.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=learning_rate), metrics=['accuracy'])
-        return model
-    
-    def build_dynamic_model(learning_rate, layers):
+    #     model.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=learning_rate), metrics=['accuracy'])
+    #     return model
+
+    @staticmethod 
+    def create_model(learning_rate, layers):
         model = Sequential()
         for i, layer_params in enumerate(layers):
             if i == 0:
@@ -58,14 +59,14 @@ class Model:
         return reshaped_weights
 
     @staticmethod
-    def fitness_function(weights, data, shape_list, epochs=5):      
+    def fitness_function(weights, data, shape_list, layers, epochs=5):      
         (X_train, y_train), (X_test, y_test) = data
 
         learning_rate = weights[-1]
         weights = weights[:-1]
 
         weights = Model.prepare_weights(weights, shape_list)
-        model = Model.create_model(learning_rate)
+        model = Model.create_model(learning_rate, layers)
         
         model.set_weights(weights)
 

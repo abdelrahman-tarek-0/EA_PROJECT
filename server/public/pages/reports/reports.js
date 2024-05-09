@@ -72,6 +72,8 @@ const controller = async (data, delay) => {
       const id = document.createElement('div')
       const fitness = document.createElement('div')
       const container = document.createElement('div')
+       
+      container.id = `ind-${individual.id}`
 
       ind.innerHTML = choseRandomEmojiPerson()
       id.textContent = `${individual.id}`
@@ -84,6 +86,10 @@ const controller = async (data, delay) => {
       id.style.marginBottom = '5px'
       fitness.style.marginBottom = '5px'
 
+     
+
+
+      
       container.appendChild(id)
       container.appendChild(ind)
       container.appendChild(fitness)

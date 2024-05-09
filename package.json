@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:python": "cd model && python3 main.py",
     "start:node": "cd server && node index.js",
+    "genepool": "cd model && python3 ./src/utils/gene_pool_generator.py",
     "start": "concurrently \"npm run start:python\" \"npm run start:node\""
   },
   "keywords": [],

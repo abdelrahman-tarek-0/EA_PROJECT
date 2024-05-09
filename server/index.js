@@ -80,6 +80,8 @@ app.post('/reports', (req, res) => {
          id: id,
          timestamp: Date.now(),
       }
+
+      currentReports = []
    }
    else{
       currentReports.push(data)
