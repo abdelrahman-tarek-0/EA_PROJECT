@@ -11,8 +11,7 @@ def append_to_file(file_name, text):
 class DE:
     def __init__(self, *, data=[], gene_pool=None, Model=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100, layers=[], delay=1):
         self.data = data
-        self.gene_weights_pool = gene_pool[0]
-        self.gene_learning_rate_pool = gene_pool[1]
+        self.gene_weights_pool = gene_pool
         self.num_individuals = num_individuals
         self.mutateWeight = mutateWeight
         self.crossoverRate = crossoverRate
@@ -20,10 +19,10 @@ class DE:
         self.epochs = epochs
         self.generations = generations
         self.layers = layers
-        self.weightsShape = Model.getModelShapeList(Model.create_model(0.01, self.layers))
-        self.weightsListSize = len(np.concatenate([w.flatten() for w in Model.create_model(0.01, self.layers).get_weights()]).tolist())
+        self.weightsShape = Model.getModelShapeList(Model.create_model(self.layers))
+        self.weightsListSize = len(np.concatenate([w.flatten() for w in Model.create_model(self.layers).get_weights()]).tolist())
 
-        self.fitness_function = lambda genes: Model.fitness_function(genes, self.data, self.weightsShape, self.layers, self.epochs)
+        self.fitness_function = lambda genes: Model.fitness_function(genes, self.data, self.weightsShape, self.layers)
 
         self.delay = lambda padding=0 : sleep(delay + padding)
 
@@ -99,12 +98,10 @@ class DE:
             }
         })
 
-        mutatedGenes = np.clip(mutated[:-1], -0.01, 0.01)
-        learning_rate = np.clip(mutated[-1], 0.001, 0.1)
-    
- 
+        mutatedGenes = np.clip(mutated, -0.1, 0.1)
         self.delay()
-        return np.append(mutatedGenes, learning_rate)
+
+        return mutatedGenes
 
     def crossover(self, target, mutated):
 
@@ -217,7 +214,7 @@ class DE:
 
     def generate_individual(self, id):
         genes = np.random.choice(self.gene_weights_pool, self.weightsListSize).tolist()
-        genes.append(np.random.choice(self.gene_learning_rate_pool))
+  
         fitness = self.fitness_function(genes)
 
         return Individual(genes, fitness, id)
@@ -339,13 +336,6 @@ class DE:
         print("Running DE")
      
         for j in range(self.generations):
-
-            append_to_file("pop_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
-            append_to_file("trail_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
-            append_to_file("serv_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
-            append_to_file("normal_ind", f"+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++\n")
-
-            print(f"\n+++++++++++++++++++++++Generation {j}+++++++++++++++++++++++")
 
             self.send_report({
                 "command": "generation_started",

@@ -23,7 +23,7 @@ class Model:
     #     return model
 
     @staticmethod 
-    def create_model(learning_rate, layers):
+    def create_model(layers):
         model = Sequential()
         for i, layer_params in enumerate(layers):
             if i == 0:
@@ -33,8 +33,8 @@ class Model:
                 model.add(Dense(layer_params['n'], activation=layer_params['activation']))
 
         model.add(Dense(1, activation='sigmoid'))
-
-        model.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=learning_rate), metrics=['accuracy'])
+        #learning_rate
+        model.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=0.01), metrics=['accuracy'])
 
         return model
 
@@ -59,20 +59,17 @@ class Model:
         return reshaped_weights
 
     @staticmethod
-    def fitness_function(weights, data, shape_list, layers, epochs=5):      
-        (X_train, y_train), (X_test, y_test) = data
-
-        learning_rate = weights[-1]
-        weights = weights[:-1]
+    def fitness_function(weights, data, shape_list, layers):      
+        (X, y) = data
 
         weights = Model.prepare_weights(weights, shape_list)
-        model = Model.create_model(learning_rate, layers)
+        model = Model.create_model(layers)
         
         model.set_weights(weights)
 
-        model.fit(X_train, y_train, epochs=epochs, batch_size=10, verbose=0)
+        # model.fit(X_train, y_train, epochs=epochs, batch_size=10, verbose=0)
 
-        loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+        loss, accuracy = model.evaluate(X, y, verbose=0)
    
         return accuracy
    

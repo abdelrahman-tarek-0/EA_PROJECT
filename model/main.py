@@ -60,11 +60,11 @@ def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5,
     # print(f'Best Fitness: {best.Fitness}')
     # print(f'Best Genes: {best.Genes}')
 
-    best_model = Model.create_model(0.01, layers)
+    best_model = Model.create_model(layers)
     best_model.set_weights(Model.prepare_weights(best.Genes[:-1], de.weightsShape))
 
-    (X, y) = load_dataset(False)
-    best_model.fit(X, y, epochs=500, batch_size=10)
+    # (X, y) = load_dataset(False)
+    # best_model.fit(X, y, epochs=500, batch_size=10)
     
     modelId = round(time.time()*1000)
 
@@ -121,7 +121,7 @@ def get_model_info ():
     if len(layers) == 0:
         return 'No layers provided'
     
-    model = Model.create_model(0.01, layers)
+    model = Model.create_model(layers)
     shape = Model.getModelShapeList(model)
     weights = len(np.concatenate([w.flatten() for w in model.get_weights()]).tolist())
     name = Model.visualize_model(model, f"graph-{round(time.time()*1000)}", "../server/public/uploads")

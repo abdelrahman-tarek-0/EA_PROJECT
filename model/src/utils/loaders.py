@@ -10,12 +10,15 @@ def load_dataset(split=True):
     names = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome']
     data = pd.read_csv("src/dataset/diabetes.csv", names=names, header=None)
 
+    print(data.isnull().sum())
     # Replace missing values (0s) with NaN
     data = data.replace({'Glucose': {0: np.nan},
                             'BloodPressure': {0: np.nan},
                             'SkinThickness': {0: np.nan},
                             'Insulin': {0: np.nan},
                             'BMI': {0: np.nan}}).iloc[1:]
+
+
 
     data.dropna(inplace=True)
 
@@ -24,20 +27,24 @@ def load_dataset(split=True):
     X = numeric_data.drop('Outcome', axis=1)
     y = numeric_data['Outcome']
 
+    
+
+    return X, y
+
     # scaler = StandardScaler()
     # X_normalized = scaler.fit_transform(X)
-    if(split):
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # if(split):
+    #     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
             
-        return (X_train, y_train), (X_test, y_test)
-    else:
-        return X, y
+    #     return (X_train, y_train), (X_test, y_test)
+    # else:
+    #     return X, y
     
     # gene_weights_pool = np.load("./dataset/gene_weights_pool.npy")
     # gene_learning_rate_pool = np.load("./dataset/gene_learning_rate_pool.npy")
 
 def load_gene_pool():
-    gene_weights_pool = np.load("src/dataset/gene_weights_pool.npy")
-    gene_learning_rate_pool = np.load("src/dataset/gene_learning_rate_pool.npy")
+    gene_weights_pool = np.load("src/dataset/gene_pool.npy")
+    # gene_learning_rate_pool = np.load("src/dataset/gene_learning_rate_pool.npy")
 
-    return gene_weights_pool, gene_learning_rate_pool
+    return gene_weights_pool
