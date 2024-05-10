@@ -1,6 +1,7 @@
 import numpy as np
 from src.classes.Individual import Individual
 import time 
+from time import sleep
 from joblib import Parallel, delayed
 
 def append_to_file(file_name, text):
@@ -8,7 +9,7 @@ def append_to_file(file_name, text):
         file.write(text)
 
 class DE:
-    def __init__(self, *, data=[], gene_pool=None, Model=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100, layers=[]):
+    def __init__(self, *, data=[], gene_pool=None, Model=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100, layers=[], delay=1):
         self.data = data
         self.gene_weights_pool = gene_pool[0]
         self.gene_learning_rate_pool = gene_pool[1]
@@ -23,6 +24,8 @@ class DE:
         self.weightsListSize = len(np.concatenate([w.flatten() for w in Model.create_model(0.01, self.layers).get_weights()]).tolist())
 
         self.fitness_function = lambda genes: Model.fitness_function(genes, self.data, self.weightsShape, self.layers, self.epochs)
+
+        self.delay = lambda padding=0 : sleep(delay + padding)
 
         self.send_report({
             "command": "start",
@@ -70,12 +73,41 @@ class DE:
         return population
 
     def mutation (self, r1, r2, r3):
-        mutated  = r3.Genes + self.mutateWeight*(r1.Genes - r2.Genes)
-        self.send_report({"fitness": self.fitness_function(mutated), "id": "mutated"})
 
-        return np.clip(mutated, -1, 1)
+        mutated  = r3.Genes + self.mutateWeight*(r1.Genes - r2.Genes)
+        
+        self.send_report({
+            "command": "mutation",
+            "r1": {
+                "id": r1.id,
+                "fitness": r1.Fitness,
+                "genes": r1.Genes.tolist()
+            },
+            "r2": {
+                "id": r2.id,
+                "fitness": r2.Fitness,
+                "genes": r2.Genes.tolist()
+            },
+            "r3": {
+                "id": r3.id,
+                "fitness": r3.Fitness,
+                "genes": r3.Genes.tolist()
+            },
+            "mutated": {
+                "genes": mutated.tolist(),
+                "fitness": "Not Calculated",
+            }
+        })
+
+        mutatedGenes = np.clip(mutated[:-1], -0.01, 0.01)
+        learning_rate = np.clip(mutated[-1], 0.001, 0.1)
+    
+ 
+        self.delay()
+        return np.append(mutatedGenes, learning_rate)
 
     def crossover(self, target, mutated):
+
         trail_gene = []
         for i in range(len(target.Genes)):
             if np.random.rand() < self.crossoverRate:
@@ -83,24 +115,60 @@ class DE:
             else:
                 trail_gene.append(target.Genes[i])
 
-        self.send_report({"fitness": self.fitness_function(trail_gene), "id": "trail_gene"})
+        self.send_report({
+            "command": "crossover",
+            "target": {
+                "id": target.id,
+            },
+            "trail": trail_gene,
+        })
+
+        self.delay()
         return trail_gene
        
     def survive(self, target, trail_gene):
+        self.send_report({
+            "command": "survive-started",
+            "target": {
+                "id": target.id,
+            },
+        })
+
         trail_gene_fitness = self.fitness_function(trail_gene)
-        print(f"Trail Gene Fitness: {trail_gene_fitness}")
+
+        self.send_report({
+            "command": "survive-trail_gene_fitness",
+            "fitness": trail_gene_fitness,
+        })
 
         new_individual = None
-        append_to_file("trail_ind", f"{trail_gene_fitness}\n")
-
+        winner = None
         if trail_gene_fitness > target.Fitness:
-            append_to_file("serv_ind", f"Individual Fitness: {target.Fitness} is less than Trail Gene Fitness: {trail_gene_fitness}\n")
             new_individual = Individual(trail_gene, trail_gene_fitness, target.id)
+            winner = "trail_gene"
         else:
             new_individual = target
+            winner = "target"
 
-        self.send_report({"fitness": new_individual.Fitness, "id": "new_individual"})
+        self.delay()
+        self.send_report({
+            "command": "survive-finished",
+            "winner": winner,
+            "new_individual": {
+                "id": new_individual.id,
+                "fitness": new_individual.Fitness,
+                "genes": new_individual.Genes.tolist()
+            },
+            "target" :{
+                "id": target.id,
+                "fitness": target.Fitness,
+                "genes": target.Genes.tolist()
+            },
+            "trail_gene_fitness": trail_gene_fitness
+        })
 
+        
+        self.delay()
         return new_individual
 
 
@@ -110,6 +178,31 @@ class DE:
         
         r1, r2, r3 = np.random.choice(populationWithoutTarget, 3, replace=False) 
 
+        self.send_report({
+            "command": "selection",
+            "target": {
+                "id": target.id,
+                "fitness": target.Fitness,
+                "genes": target.Genes.tolist()
+            },
+            "r1": {
+                "id": r1.id,
+                "fitness": r1.Fitness,
+                "genes": r1.Genes.tolist()
+            },
+            "r2": {
+                "id": r2.id,
+                "fitness": r2.Fitness,
+                "genes": r2.Genes.tolist()
+            },
+            "r3": {
+                "id": r3.id,
+                "fitness": r3.Fitness,
+                "genes": r3.Genes.tolist()
+            }
+        })
+
+        self.delay()
         return target, r1, r2, r3
     
     def get_best_individual(self):
@@ -129,6 +222,119 @@ class DE:
 
         return Individual(genes, fitness, id)
     
+    def run_generation(self): 
+            new_population = []
+
+            for i in range(len(self.population)):
+                target, r1, r2, r3 = self.selection(i)
+                mutated = self.mutation(r1, r2, r3)
+                trail_gene = self.crossover(target, mutated)
+                self.send_report({
+                    "command": "clean_up",
+                    "deleteTrail": False,
+                    "deleteMutated": False,
+                    "data": [
+                        {
+                            "id": r1.id,
+                            "fitness": r1.Fitness,
+                            "genes": r1.Genes.tolist()
+                        },
+                        {
+                            "id": r2.id,
+                            "fitness": r2.Fitness,
+                            "genes": r2.Genes.tolist()
+                        },
+                        {
+                            "id": r3.id,
+                            "fitness": r3.Fitness,
+                            "genes": r3.Genes.tolist()
+                        }
+                    ]
+                })
+                self.delay()
+                new_individual = self.survive(target, trail_gene)
+
+                new_population.append(new_individual)
+
+                self.send_report({
+                    "command": "new-individual",
+                    "individual": {
+                        "id": new_individual.id,
+                        "fitness": new_individual.Fitness,
+                        "genes": new_individual.Genes.tolist()
+                    },
+                })
+
+                self.delay()
+                self.send_report({
+                    "command": "clean_up",
+                    "deleteTrail": True,
+                    "deleteMutated": True,
+                    "data": [
+                        {
+                            "id": target.id,
+                            "fitness": target.Fitness,
+                            "genes": target.Genes.tolist()
+                        },
+                    ]
+                })
+                self.delay()
+
+            return new_population
+    
+    def run_generation_parallel(self):
+            def opt(i): 
+                target, r1, r2, r3 = self.selection(i)
+                mutated = self.mutation(r1, r2, r3)
+                trail_gene = self.crossover(target, mutated)
+
+                self.send_report({
+                    "command": "clean_up",
+                    "deleteTrail": False,
+                    "deleteMutated": False,
+                    "data": [
+                        {
+                            "id": r1.id,
+                            "fitness": r1.Fitness,
+                            "genes": r1.Genes.tolist()
+                        },
+                        {
+                            "id": r2.id,
+                            "fitness": r2.Fitness,
+                            "genes": r2.Genes.tolist()
+                        },
+                        {
+                            "id": r3.id,
+                            "fitness": r3.Fitness,
+                            "genes": r3.Genes.tolist()
+                        }
+                    ]
+                })
+                self.delay()
+
+                new_individual = self.survive(target, trail_gene)
+
+                self.delay()
+                self.send_report({
+                    "command": "clean_up",
+                    "deleteTrail": True,
+                    "deleteMutated": True,
+                    "data": [
+                        {
+                            "id": target.id,
+                            "fitness": target.Fitness,
+                            "genes": target.Genes.tolist()
+                        },
+                    ]
+                })
+                self.delay()
+                return new_individual
+
+
+            new_population = Parallel(n_jobs=-1)(delayed(opt)(i) for i in range(len(self.population)))
+
+            return new_population
+
     def run(self):
         print("Running DE")
      
@@ -148,59 +354,146 @@ class DE:
                 "message": f"Running Generation {j}"
             })
         
-            new_population = []
+            # new_population = []
 
             # start = time.time()
             # for i in range(len(self.population)):
             #     target, r1, r2, r3 = self.selection(i)
             #     mutated = self.mutation(r1, r2, r3)
             #     trail_gene = self.crossover(target, mutated)
-
-            #     print(f"Individual {i} Fitness: {target.Fitness}")
-            #     append_to_file("normal_ind", f"{target.Fitness}\n")
-
+            #     self.send_report({
+            #         "command": "clean_up",
+            #         "deleteTrail": False,
+            #         "deleteMutated": False,
+            #         "data": [
+            #             {
+            #                 "id": r1.id,
+            #                 "fitness": r1.Fitness,
+            #                 "genes": r1.Genes.tolist()
+            #             },
+            #             {
+            #                 "id": r2.id,
+            #                 "fitness": r2.Fitness,
+            #                 "genes": r2.Genes.tolist()
+            #             },
+            #             {
+            #                 "id": r3.id,
+            #                 "fitness": r3.Fitness,
+            #                 "genes": r3.Genes.tolist()
+            #             }
+            #         ]
+            #     })
+            #     self.delay()
             #     new_individual = self.survive(target, trail_gene)
+
             #     new_population.append(new_individual)
 
+            #     self.send_report({
+            #         "command": "new-individual",
+            #         "individual": {
+            #             "id": new_individual.id,
+            #             "fitness": new_individual.Fitness,
+            #             "genes": new_individual.Genes.tolist()
+            #         },
+            #     })
 
-            #     append_to_file("pop_ind", f"{self.population[i].Fitness}\n")
+            #     self.delay()
+            #     self.send_report({
+            #         "command": "clean_up",
+            #         "deleteTrail": True,
+            #         "deleteMutated": True,
+            #         "data": [
+            #             {
+            #                 "id": target.id,
+            #                 "fitness": target.Fitness,
+            #                 "genes": target.Genes.tolist()
+            #             },
+            #         ]
+            #     })
+            #     self.delay()
 
             # end = time.time()
 
-            start = time.time()
-            def opt(i): 
-                target, r1, r2, r3 = self.selection(i)
-                mutated = self.mutation(r1, r2, r3)
-                trail_gene = self.crossover(target, mutated)
+            # start = time.time()
+            # def opt(i): 
+            #     target, r1, r2, r3 = self.selection(i)
+            #     mutated = self.mutation(r1, r2, r3)
+            #     trail_gene = self.crossover(target, mutated)
 
-                print(f"Individual {i} Fitness: {target.Fitness}")
+            #     self.send_report({
+            #         "command": "clean_up",
+            #         "deleteTrail": False,
+            #         "deleteMutated": False,
+            #         "data": [
+            #             {
+            #                 "id": r1.id,
+            #                 "fitness": r1.Fitness,
+            #                 "genes": r1.Genes.tolist()
+            #             },
+            #             {
+            #                 "id": r2.id,
+            #                 "fitness": r2.Fitness,
+            #                 "genes": r2.Genes.tolist()
+            #             },
+            #             {
+            #                 "id": r3.id,
+            #                 "fitness": r3.Fitness,
+            #                 "genes": r3.Genes.tolist()
+            #             }
+            #         ]
+            #     })
+            #     self.delay()
 
-                self.send_report({"fitness": target.Fitness, "id": i})
-                # append_to_file("normal_ind", f"{target.Fitness}\n")
+            #     new_individual = self.survive(target, trail_gene)
 
-                new_individual = self.survive(target, trail_gene)
+            #     self.delay()
+            #     self.send_report({
+            #         "command": "clean_up",
+            #         "deleteTrail": True,
+            #         "deleteMutated": True,
+            #         "data": [
+            #             {
+            #                 "id": target.id,
+            #                 "fitness": target.Fitness,
+            #                 "genes": target.Genes.tolist()
+            #             },
+            #         ]
+            #     })
+            #     self.delay()
 
-                # append_to_file("pop_ind", f"{new_individual.Fitness}\n")
 
-                return new_individual
+            #     return new_individual
 
 
-            new_population = Parallel(n_jobs=-1)(delayed(opt)(i) for i in range(len(self.population)))
-            end = time.time()   
+            # new_population = Parallel(n_jobs=-1)(delayed(opt)(i) for i in range(len(self.population)))
+            # end = time.time()   
 
-            print(f"Time taken to run generation {j}: {end - start} seconds")
+            # print(f"Time taken to run generation {j}: {end - start} seconds")
 
-            bestInGeneration = self.get_best_individual()
-            self.population = new_population # generational model
+            # bestInGeneration = self.get_best_individual()
+            self.population = self.run_generation() # generational model
 
-            self.send_report({"fitness": bestInGeneration.Fitness, "id": j, "message": f"Best in Generation {j}"})
+            # self.send_report({
+            #     "command": "generation_finished",
+            #     "generation": j,
+            #     "best_fitness": bestInGeneration.Fitness,
+            #     "message": f"Generation {j} finished",
+            #     "best_individual": {
+            #         "id": bestInGeneration.id,
+            #         "fitness": bestInGeneration.Fitness,
+            #         "genes": bestInGeneration.Genes.tolist()
+            #     }
+            # })
 
-            print(f"Best in Generation {j} Fitness: {bestInGeneration.Fitness}\n")
-       
+            self.send_report({
+                "command": "generation_finished",
+                "generation": j,
+            })
 
-        self.send_report({"command": "finish", "message": "Algorithm finished"})
+            self.delay(2)
 
         return self.get_best_individual()
+    
     
     # def stop(self):
 

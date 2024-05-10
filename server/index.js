@@ -1,4 +1,5 @@
 const path = require('path')
+const fs = require('fs')
 const express = require('express')
 const {Server} = require('socket.io')
 const cors = require('cors')
@@ -40,6 +41,11 @@ app.get('/start', (req, res) => {
 app.get('/reports', (req, res) => {
    res.sendFile(path.join(__dirname, 'public', 'pages', 'reports', 'reports.html'))
 })
+app.get('/model/:id', (req, res) => {
+   const file = path.join(__dirname, 'public', 'pages', 'try-model', 'model.html')
+   const html = fs.readFileSync(file, 'utf8')
+   res.send(html.replaceAll('{{ID}}', req.params.id))
+})
 
 app.get('/health', (req, res) => {
    res.send("Ok")
@@ -73,7 +79,7 @@ app.post('/reports', (req, res) => {
       currentReports.push({
          ...data,
       })
-      const id = `${Date.now()}`
+      const id = data.id
 
       reports[id] = {
          data: currentReports,

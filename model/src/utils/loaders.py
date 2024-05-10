@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
 
 
-def load_dataset():
+def load_dataset(split=True):
     names = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome']
     data = pd.read_csv("src/dataset/diabetes.csv", names=names, header=None)
 
@@ -24,12 +24,14 @@ def load_dataset():
     X = numeric_data.drop('Outcome', axis=1)
     y = numeric_data['Outcome']
 
-    scaler = StandardScaler()
-    X_normalized = scaler.fit_transform(X)
-
-    X_train, X_test, y_train, y_test = train_test_split(X_normalized, y, test_size=0.2, random_state=42)
-        
-    return (X_train, y_train), (X_test, y_test)
+    # scaler = StandardScaler()
+    # X_normalized = scaler.fit_transform(X)
+    if(split):
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            
+        return (X_train, y_train), (X_test, y_test)
+    else:
+        return X, y
     
     # gene_weights_pool = np.load("./dataset/gene_weights_pool.npy")
     # gene_learning_rate_pool = np.load("./dataset/gene_learning_rate_pool.npy")

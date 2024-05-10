@@ -6,7 +6,9 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 import requests
 import numpy as np
-import random
+from keras.models import Sequential, load_model
+from sklearn.preprocessing import StandardScaler
+
 from src.AI.de_algo import DE
 from src.AI.model import Model
 from src.utils.loaders import load_dataset, load_gene_pool
@@ -20,7 +22,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 node_backend = 'http://127.0.0.1:8001'
 is_running = False
-print(load_gene_pool())
+# print(load_gene_pool())
 
 def send_report(report):
     requests.post(f'{node_backend}/reports', json=report)
@@ -34,7 +36,7 @@ def check_node():
 
 
 
-def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5, num_generations=3, layers=[]):
+def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5, num_generations=3, layers=[], delay=0):
     global is_running
     is_running = True
 
@@ -48,20 +50,33 @@ def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5,
         send_report=send_report,
         epochs=epochs,
         generations=num_generations,
-        layers=layers
+        layers=layers,
+        delay=delay
     )
 
     best = de.run()
 
+
     # print(f'Best Fitness: {best.Fitness}')
     # print(f'Best Genes: {best.Genes}')
 
-    # best_model = Model.create_model(best.Genes[-1])
-    # best_model.set_weights(Model.prepare_weights(best.Genes[:-1]))
-    # best_model.fit(de.data, epochs=epochs, batch_size=10)
+    best_model = Model.create_model(0.01, layers)
+    best_model.set_weights(Model.prepare_weights(best.Genes[:-1], de.weightsShape))
+
+    (X, y) = load_dataset(False)
+    best_model.fit(X, y, epochs=500, batch_size=10)
+    
+    modelId = round(time.time()*1000)
 
     # # save the model
-    # best_model.save('./dataset/best_model.h5')
+    best_model.save(f'./generated_models/{modelId}.keras')
+
+    send_report({
+        "command": "finish",
+        "id": modelId,
+        "fitness": best.Fitness
+    })
+
 
     return best.Fitness
 
@@ -81,6 +96,7 @@ def run():
     mutateWeight = data.get('mutateWeight', 0.5)
     crossoverRate = data.get('crossoverRate', 0.5)
     layers = data.get('layers', [])
+    delay = data.get('delay', 0)
     
     best_fitness = main(
         epochs=epochs,
@@ -88,7 +104,8 @@ def run():
         mutateWeight=mutateWeight,
         crossoverRate=crossoverRate,
         num_generations=num_generations,
-        layers=layers
+        layers=layers,
+        delay=delay
     )
 
     is_running = False
@@ -119,6 +136,37 @@ def get_model_info ():
 def status():
     global is_running
     return 'Running' if is_running else 'Idle'
+
+@app.route('/model-status/', methods=['GET'])
+def model_status():
+    modelId = request.args.get('id')
+    modelPath = f'./generated_models/{modelId}.keras'
+    isModelExists = os.path.exists(modelPath)
+
+    return jsonify({
+        'exists': isModelExists,
+        'path': modelPath
+    })
+    
+@app.route('/predict/', methods=['POST'])
+def predict():
+    data = request.json
+    modelId = data.get('id')
+    inputDataArray = data.get('data')
+    print(modelId)
+    modelPath = f'./generated_models/{modelId}.keras'
+
+    if not os.path.exists(modelPath):
+        return 'Model not found'
+    
+    model = load_model(modelPath)
+    X = np.array(inputDataArray).reshape(1, -1)
+    y = model.predict(X)
+    print(y)
+
+    return jsonify({
+        'prediction': f'{y.tolist()[0][0]}'
+    })
 
 if __name__ == '__main__':
 

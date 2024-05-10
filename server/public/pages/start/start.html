@@ -77,6 +77,9 @@
 
 
         button {
+            display: block;
+            width: 100%;
+            text-align: center;
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
@@ -84,19 +87,32 @@
             color: #fff;
             cursor: pointer;
         }
+        button:hover {
+            background-color: #0056b3;
+        }
 
         #Visualize-NN-btn{
             background-color: #28a745;
 
         }
 
-        button:hover {
-            background-color: #0056b3;
-        }
+       
         #Visualize-NN-btn:hover {
             background-color: #218838;
         }
+
+        .remove-layer{
+            background-color: #dc3545;
+        }
+        .remove-layer:hover{
+            background-color: #d85b68;
+        }
     </style>
+    <script>
+        function deleteElement(id){
+            document.getElementById(id).remove();
+        }
+    </script>
     <title>Report</title>
 </head>
 <body>
@@ -106,10 +122,10 @@
             <section id="start-algorithm" class="section">
                 <h3>Edit algorithm</h3>
                 <label for="num_individuals">The Number of Individuals</label>
-                <input type="number" id="num_individuals" name="num_individuals" min="4" required value="20">
+                <input type="number" id="num_individuals" name="num_individuals" min="4" required value="10">
     
                 <label for="num_generations">The Number of Generations</label>
-                <input type="number" id="num_generations" name="num_generations" min="1" required value="4">
+                <input type="number" id="num_generations" name="num_generations" min="1" required value="3">
                 
                 <label for="epochs">epochs</label>
                 <input type="number" id="epochs" name="epochs" min="1" required value="5">
@@ -119,15 +135,18 @@
                 
                 <label for="crossoverRate">crossover rate</label>
                 <input type="number" id="crossoverRate" name="crossoverRate" step="0.1" min="0" max="1" required value="0.7">
+
+                <label for="delay">Delay in seconds</label>
+                <input type="number" id="delay" name="delay" step="0.1" min="0"  required value="1">
            </section>
             <section id="nn-algorithm" class="section">
                 <h3>Edit the NN of the Individual</h3>
 
-                <div>
+                <div id="layer-1">
                     <h4>Layer 1</h4>
                     <div class="input-comp">
                         <label for="nn-layer-1">Number of neurons: </label>
-                        <input class="nn-layers" type="number" id="nn-layer-1" name="nn-layer-1" min="1" required value="12">
+                        <input class="nn-layers" type="number" id="nn-layer-1" name="nn-layer-1" min="1" required value="16">
 
                         <label for="nn-activation-1">Activation Function:</label>
                         <select name="nn-activation-1" id="nn-activation-1">
@@ -136,10 +155,12 @@
                             <option value="tanh">Tanh</option>
                             <option value="linear">Linear</option>
                           </select>
+                        <button type="button" class="remove-layer" onclick="deleteElement('layer-1')">Remove Layer</button>
+                        
                     </div>
                 </div>
 
-                <div>
+                <div id="layer-2">
                     <h4>Layer 2</h4>
                     <div class="input-comp">
                         <label for="nn-layer-2">Number of neurons: </label>
@@ -152,7 +173,10 @@
                             <option value="tanh">Tanh</option>
                             <option value="linear">Linear</option>
                           </select>
+                          <button type="button" class="remove-layer" onclick="deleteElement('layer-2')">Remove Layer</button>
                     </div>
+         
+
                 </div>
 
                 <button type="button" id="add-layer" style="margin-bottom: 10px;">Add Layer</button>

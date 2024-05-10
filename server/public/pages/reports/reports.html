@@ -3,10 +3,16 @@
    <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link href="assets/fontawesome/all.min.css" type="text/css" rel="stylesheet">
-      <link rel="stylesheet" type="text/css" href="assets/toastify/all.css">
-      <script type="text/javascript" src="assets/toastify/main.js"></script>
+
+
       <style>
+         *{
+            /* margin: 0;
+            padding: 0;
+            box-sizing: border-box; */
+      
+            position: relative;
+         }
          body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -15,8 +21,8 @@
          }
          #current_generation {
             display: block;
-            width: 1000px;
-            height: 50px;
+            width: 70%;
+            height: 10%;
             margin: 10px auto;
             padding: 20px;
             background-color: #fff;
@@ -28,8 +34,8 @@
          }
          #population_space {
             display: block;
-            width: 1000px;
-            height: 500px;
+            width: 70%;
+            height: 70%;
             margin: 20px auto;
             padding: 30px;
             background-color: #fff;
@@ -38,16 +44,290 @@
             border-radius: 10px; /* Rounded corners */
             position: relative;
          }
-
-         #individual {
-            color: red;
+         #space {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 75%;
+            height: 75vh;
          }
+         #operations {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            width: 20%;
+            height: 75vh;
+         }
+
+         #algorithm-space {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: space-evenly;
+            align-items: center;
+            width: 100%;
+            /* height: 70vh; */
+         }
+
+         .operations-container{
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: flex-start;
+            width: 100%;
+            height: 10%;
+         }
+         .operation {
+            /* position: relative; */
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            margin: 10px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            text-align: center; /* Centers the text */
+            font-size: 20px; /* Makes the text bigger */
+            font-weight: bold; /* Makes the text bold */
+            color: #333; /* Changes the text color */
+         }
+
+         .individual, .new-individual {
+            margin: 5px;
+         }
+
+         .mutation-operation{
+            width: 10%;
+            height: 100%;
+            margin: 10px auto;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex  ;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            
+         }
+
+         #mutation-operation-label{
+            box-shadow: none
+         }
+
+         #mutation-operations-container{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: flex-start;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+         }
+
+         .crossover-operation{
+            width: 10%;
+            height: 100%;
+            margin: 10px auto;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex  ;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            
+         }
+
+         #crossover-operation-label{
+            box-shadow: none
+         }
+
+         #crossover-operations-container{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: flex-start;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+         }
+
+         .survival-operation{
+            width: 10%;
+            height: 100%;
+            margin: 10px auto;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex  ;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+         }
+
+         #survival-operation-label{
+            box-shadow: none
+         }
+
+         #survival-operations-container{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: flex-start;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+         }
+         #survival-lapel{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 93%;
+            height: 100%;
+         }
+
+         #new-bus{
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            flex-wrap: wrap;
+            width: 80%;
+            /* width: 100%; */
+         }
+
+         
+         .lds-ring {
+         /* change color here */
+         color: #1c4c5b
+         }
+         .lds-ring,
+         .lds-ring div {
+         box-sizing: border-box;
+         }
+         .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 12px;
+            height: 12px;
+         }
+         .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            margin: 8px;
+            border: 8px solid currentColor;
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: currentColor transparent transparent transparent;
+         }
+         .lds-ring div:nth-child(1) {
+         animation-delay: -0.45s;
+         }
+         .lds-ring div:nth-child(2) {
+         animation-delay: -0.3s;
+         }
+         .lds-ring div:nth-child(3) {
+         animation-delay: -0.15s;
+         }
+         @keyframes lds-ring {
+         0% {
+            transform: rotate(0deg);
+         }
+         100% {
+            transform: rotate(360deg);
+         }
+         }
+
+
       </style>
+
+      <link
+      href="assets/fontawesome/all.min.css"
+      type="text/css"
+      rel="stylesheet"
+      />
+      <link rel="stylesheet" type="text/css" href="assets/toastify/all.css" />
+      <script type="text/javascript" src="assets/toastify/main.js"></script>
+      <script type="text/javascript" src="assets/sweatalert/main.js"></script>
       <title>Report</title>
    </head>
    <body>
-      <div id="current_generation"></div>
-      <div id="population_space"></div>
+      <section id="algorithm-space">
+         
+         <section id="space">
+            <div id="current_generation"></div>
+            <div id="population_space">
+               <!-- <div id="ind-1" style="position: absolute; left: 4.75564%; top: 1.51269%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: all 0.5s ease 0s;"><div style="margin-bottom: 5px;">1</div><div style="font-size: 24px; margin-bottom: 5px;"><i class="fa-duotone fa-person fa-xl"></i></div><div style="font-size: 12px; margin-bottom: 5px;">0.461</div></div> -->
+            </div>
+         </section>
+         <section id="operations">
+            <div class="operations-container">
+               <span id="selected-lapel">Selected: </span>
+               <div style="display: flex; flex-direction: row; justify-content: space-between; height: 100%; width: 100%;">
+                  <div class="operation" id="selected-target" style="margin: 10px; width: 20%;"></div>
+                  <div class="operation" id="selected"  style="margin: 10px;"></div>
+               </div>
+            </div>
+            <!-- <button id="start">selected</button> -->
+            <div class="operations-container">
+               <span id="mutation-lapel">Mutation: </span>
+               <div id="mutation-operations-container">
+                  <div  class="mutation-operation" id="mutation-operation-1">
+                  </div>
+                  <div  class="mutation-operation" id="mutation-operation-2">
+                  </div>
+                  <div class="mutation-operation"  id="mutation-operation-3"></div>
+                  <i class="fa-solid fa-equals mutation-operation" id="mutation-operation-label"></i>
+                  <div class="mutation-operation"  id="mutation-operation-4"></div>
+               </div>
+            </div>
+            <div class="operations-container">
+               <span id="crossover-lapel">Crossover: </span>
+               <div id="crossover-operations-container">
+                  <div  class="crossover-operation" id="crossover-operation-1">
+                  </div>
+                  <i class="fa-solid fa-xmark crossover-operation" id="crossover-operation-label"></i>
+                  <div  class="crossover-operation" id="crossover-operation-2">
+                  </div>
+                  <i class="fa-solid fa-equals crossover-operation" id="crossover-operation-label"></i>
+                  <div class="crossover-operation"  id="crossover-operation-3"></div>
+               </div>
+            </div>
+            <div class="operations-container">
+               <span id="survival-lapel">
+                  <span >Survival:</span>
+                  <span >Winner</span>
+               </span>
+               <div id="survival-operations-container">
+                  <div  class="survival-operation" id="survival-operation-1">
+                  </div>
+
+                  <div  class="survival-operation" id="survival-operation-2">
+                  </div>
+                  <i class="fa-solid fa-equals survival-operation" id="survival-operation-label"></i>
+                  <div class="survival-operation"  id="survival-operation-3"></div>
+               </div>
+            </div>
+         </section>
+      </section>
+      <section id="new-population-bus" style="padding: 10px;">
+         <h1>New Population</h1>
+         <div class="operation" id="new-bus"></div>
+      </section>
       <h1>Report</h1>
       <ol id="reports"></ol>
    </body>

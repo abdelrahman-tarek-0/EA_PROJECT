@@ -53,6 +53,9 @@ const startModel = async (data) => {
 }
 
 addLayerBtn.addEventListener('click', () => {
+
+   // <button type="button" class="remove-layer" onclick="deleteElement('layer-1')">Remove Layer</button>
+
    const layersInputs = document.querySelectorAll('.nn-layers')
 
    const section = document.querySelector('#nn-algorithm')
@@ -63,6 +66,7 @@ addLayerBtn.addEventListener('click', () => {
    const inputN = document.createElement('input')
    const labelA = document.createElement('label')
    const select = document.createElement('select')
+   const button = document.createElement('button')
 
    const layersCount = layersInputs.length + 1
 
@@ -77,6 +81,13 @@ addLayerBtn.addEventListener('click', () => {
    inputN.setAttribute('required', '')
    inputN.setAttribute('value', '8')
    inputN.classList.add('nn-layers')
+
+   button.setAttribute('type', 'button')
+   button.classList.add('remove-layer')
+   button.textContent = 'Remove Layer'
+   button.setAttribute('onclick', `deleteElement('layer-${layersCount}')`)
+
+   div.id = `layer-${layersCount}`
 
    labelA.setAttribute('for', `nn-activation-${layersCount}`)
    labelA.textContent = 'Activation Function: '
@@ -93,9 +104,11 @@ addLayerBtn.addEventListener('click', () => {
    divInput.appendChild(inputN)
    divInput.appendChild(labelA)
    divInput.appendChild(select)
+   divInput.appendChild(button)
 
    div.appendChild(h4)
    div.appendChild(divInput)
+
 
    section.insertBefore(div, addLayerBtn)
 })
@@ -110,6 +123,11 @@ visualizeNNBtn.addEventListener('click', async () => {
          n: Number(document.querySelector(`#nn-layer-${i}`).value),
          activation: document.querySelector(`#nn-activation-${i}`).value,
       })
+   }
+
+   if (!layers.length) {
+      alert('Please add layers to visualize the Neural Network')
+      return
    }
 
    console.log(layers)
@@ -137,6 +155,7 @@ form.addEventListener('submit', async (e) => {
       epochs: Number(formData.get('epochs')),
       mutateWeight: Number(formData.get('mutateWeight')),
       crossoverRate: Number(formData.get('crossoverRate')),
+      delay: Number(formData.get('delay')),
    }
 
    const layersInputs = document.querySelectorAll('.nn-layers').length
@@ -148,6 +167,10 @@ form.addEventListener('submit', async (e) => {
          n: Number(formData.get(`nn-layer-${i}`)),
          activation: formData.get(`nn-activation-${i}`),
       })
+   }
+   if (!layers.length) {
+      alert('Please add layers to start the Neural Network')
+      return
    }
 
    editAlgorithm.layers = layers
