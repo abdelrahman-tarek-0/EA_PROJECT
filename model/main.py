@@ -1,5 +1,7 @@
 import os
 import time
+import shutil
+
 os.environ["PATH"] += os.pathsep + 'C:/Graphviz-11.0.0-win64/bin'
 
 from flask import Flask, request, jsonify
@@ -22,7 +24,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 node_backend = 'http://127.0.0.1:8001'
 is_running = False
-# print(load_gene_pool())
+
 
 def send_report(report):
     requests.post(f'{node_backend}/reports', json=report)
@@ -36,7 +38,7 @@ def check_node():
 
 
 
-def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5, num_generations=3, layers=[], delay=0, dataset='diabetes'):
+def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5, num_generations=3, layers=[], delay=0, dataset='diabetes', isParallel=False):
     global is_running
     is_running = True
 
@@ -60,28 +62,34 @@ def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5,
         generations=num_generations,
         layers=layers,
         delay=delay,
-        input_dim=input_dim
+        input_dim=input_dim,
+        isParallel=isParallel
     )
 
-    best = de.run()
+    (best, history) = de.run()
+    modelId = round(time.time()*1000)
+    
+    publicLocationHistoryOV = os.path.join(os.getcwd(), f'../server/public/uploads/{modelId}-history-ov.png')
+    publicLocationHistoryB = os.path.join(os.getcwd(), f'../server/public/uploads/{modelId}-history-b.png')
 
-
-    # print(f'Best Fitness: {best.Fitness}')
-    # print(f'Best Genes: {best.Genes}')
+    Model.visualize_history_over_time(history, publicLocationHistoryOV)
+    Model.visualize_history_bounders(history, publicLocationHistoryB)
 
 
     best_model = Model.create_model(layers, input_dim)
     best_model.set_weights(Model.prepare_weights(best.Genes, de.weightsShape))
 
-    # (X, y) = load_dataset(False)
-    # best_model.fit(X, y, epochs=500, batch_size=10)
     
-    modelId = round(time.time()*1000)
 
     directory = "diabetes" if dataset == 'diabetes' else "haberman"
 
-    # # save the model
     best_model.save(f'./generated_models/{directory}/{modelId}.keras')
+
+    copyModelLocation = os.path.join(os.getcwd(), f'./generated_models/{directory}/{modelId}.keras')
+    locationTo = os.path.join(os.getcwd(), f'../server/public/uploads/{modelId}.keras')
+
+    #copy
+    shutil.copy(copyModelLocation, locationTo)
 
     send_report({
         "command": "finish",
@@ -111,6 +119,9 @@ def run():
     layers = data.get('layers', [])
     delay = data.get('delay', 0)
     dataset = data.get('dataset', 'diabetes')
+    isParallel = data.get('parallelism', False)
+
+    delay = 0 if isParallel else delay
     
     best_fitness = main(
         epochs=epochs,
@@ -120,7 +131,8 @@ def run():
         num_generations=num_generations,
         layers=layers,
         delay=delay,
-        dataset=dataset
+        dataset=dataset,
+        isParallel=isParallel
     )
 
     is_running = False
@@ -195,7 +207,6 @@ def predict():
 if __name__ == '__main__':
 
     is_node_up = check_node()
-    # modelCreated = Model.create_model(0.01)
 
     if not is_node_up:
         print('Node report server is not up')

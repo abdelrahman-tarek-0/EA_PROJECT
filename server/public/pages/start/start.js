@@ -161,6 +161,7 @@ form.addEventListener('submit', async (e) => {
       crossoverRate: Number(formData.get('crossoverRate')),
       delay: Number(formData.get('delay')),
       dataset: formData.get('dataset'),
+      parallelism: formData.get('paral') === 'true' ? true : false,
    }
 
    const layersInputs = document.querySelectorAll('.nn-layers').length

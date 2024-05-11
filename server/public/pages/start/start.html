@@ -118,6 +118,12 @@
         .remove-layer:hover{
             background-color: #d85b68;
         }
+        
+
+        input[type="checkbox"]{
+            width: 20px;
+            height: 20px;
+        }
     </style>
     <script>
         function deleteElement(id){
@@ -152,6 +158,13 @@
                     <option value="diabetes">diabetes</option>
                     <option value="haberman">haberman</option>
                 </select>
+
+                <!-- create checkbox  -->
+                <label for="paral">Use parallelism <span style="color:red;">
+                    this will break the GUI but it is 10x and it will ignore the delay <i class="fas fa-terminal"></i>
+                </span></label>
+                <input type="checkbox" id="paral" name="paral" value="true">
+
            </section>
             <section id="nn-algorithm" class="section">
                 <h3>Edit the NN of the Individual</h3>

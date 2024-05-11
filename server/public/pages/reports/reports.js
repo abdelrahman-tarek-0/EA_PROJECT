@@ -161,53 +161,101 @@ const popupEndAlgorithm = (data) => {
    //    }
    //  });
 
+   const imageOV = `/uploads/${data.id}-history-ov.png`
+   const imageB = `/uploads/${data.id}-history-b.png`
+   const modelLink = `/uploads/${data.id}.keras`
+
    Swal.fire({
       title: `Training is done`,
-      icon: "info",
+      // icon: "info",
       html: `
       <style>
-         button {
-            display: block;
-            width: 100%;
-            text-align: center;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #007BFF;
-            color: #fff;
-            cursor: pointer;
-            margin: 10px;
+      button {
+          display: block;
+          width: 100%;
+          text-align: center;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          background-color: #007BFF;
+          color: #fff;
+          cursor: pointer;
+          margin: 10px 0;
       }
-
-      #cont-btn{
-         display: flex;
-         justify-content: space-between;
+  
+      #cont-btn {
+          display: flex;
+          flex-direction: column;
       }
-
+  
       button:hover {
-         background-color: #0056b3;
-     }
-
-      </style>
-         <div style="display: flex; justify-content: space-between;">
-            <div>Model ID</div>
-            <div>${data.id}</div>
-         </div>
-         <div style="display: flex; justify-content: space-between;">
-            <div>Accuracy</div>
-            <div>${data.fitness}</div>
-         </div>
-
-         <div style="display: flex; justify-content: space-between;">
-            <div>Options</div>
-            <div id="cont-btn">
-               <button onclick="window.open('/model/${data.dataset}/${data.id}', '_blank')">Try Model</button>
-               <button style="background-color: red;" onclick="window.open('/download/${data.dataset}/${data.id}', '_blank')">Download Model</button>
-            </div>
+          background-color: #0056b3;
+      }
+  
+      #container {
+          padding: 20px;
+          border-radius: 10px;
+          background-color: #f8f9fa;
+          margin: auto;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          width: 300px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+      }
+  
+      .section {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          width: 100%;
+          margin-bottom: 10px;
+      }
+  
+      .images {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+      }
+  
+      .images img {
+          width: 600px;
+          height: 400px;
+          margin-bottom: 10px;
+      }
+  </style>
+  
+  <div id="container">
+      <div class="section">
+          <div>Model ID</div>
+          <div>${data.id}</div>
+      </div>
+      <div class="section">
+          <div>Accuracy</div>
+          <div>${data.fitness}</div>
+      </div>
+  
+      <div class="section">
+          <div>Model History</div>
+          <div class="images">
+              <img src="${imageOV}" />
+              <img src="${imageB}" />
+          </div>
+      </div>
+  
+      <div class="section">
+          <div>Options</div>
+          <div id="cont-btn">
+              <button onclick="window.open('/model/${data.dataset}/${data.id}', '_blank')">Try Model</button>
+              <button style="background-color: red;" onclick="window.open('${modelLink}', '_blank')">Download Model</button>
+          </div>
+      </div>
+  </div>
       `,
       showCloseButton: false,
       showCancelButton: false,
       showConfirmButton: false,
+      customClass: 'swal-wide',
     });
 }
 
