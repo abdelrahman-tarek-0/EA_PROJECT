@@ -41,8 +41,14 @@ app.get('/start', (req, res) => {
 app.get('/reports', (req, res) => {
    res.sendFile(path.join(__dirname, 'public', 'pages', 'reports', 'reports.html'))
 })
-app.get('/model/:id', (req, res) => {
-   const file = path.join(__dirname, 'public', 'pages', 'try-model', 'model.html')
+app.get('/model/diabetes/:id', (req, res) => {
+   const file = path.join(__dirname, 'public', 'pages', 'try-model-diabetes', 'model.html')
+   const html = fs.readFileSync(file, 'utf8')
+   res.send(html.replaceAll('{{ID}}', req.params.id))
+})
+
+app.get('/model/haberman/:id', (req, res) => {
+   const file = path.join(__dirname, 'public', 'pages', 'try-model-haberman', 'model.html')
    const html = fs.readFileSync(file, 'utf8')
    res.send(html.replaceAll('{{ID}}', req.params.id))
 })
@@ -84,6 +90,7 @@ app.post('/reports', (req, res) => {
       reports[id] = {
          data: currentReports,
          id: id,
+         type: data.type,
          timestamp: Date.now(),
       }
 

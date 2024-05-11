@@ -9,7 +9,7 @@ def append_to_file(file_name, text):
         file.write(text)
 
 class DE:
-    def __init__(self, *, data=[], gene_pool=None, Model=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100, layers=[], delay=1):
+    def __init__(self, *, data=[], gene_pool=None, Model=None, num_individuals=10, mutateWeight=0.8, crossoverRate=0.7, send_report=None, epochs=5, generations=100, layers=[], delay=1, input_dim=8):
         self.data = data
         self.gene_weights_pool = gene_pool
         self.num_individuals = num_individuals
@@ -19,10 +19,12 @@ class DE:
         self.epochs = epochs
         self.generations = generations
         self.layers = layers
-        self.weightsShape = Model.getModelShapeList(Model.create_model(self.layers))
-        self.weightsListSize = len(np.concatenate([w.flatten() for w in Model.create_model(self.layers).get_weights()]).tolist())
+        self.input_dim = input_dim
+        
+        self.weightsShape = Model.getModelShapeList(Model.create_model(self.layers,  self.input_dim))
+        self.weightsListSize = len(np.concatenate([w.flatten() for w in Model.create_model(self.layers,  self.input_dim).get_weights()]).tolist())
 
-        self.fitness_function = lambda genes: Model.fitness_function(genes, self.data, self.weightsShape, self.layers)
+        self.fitness_function = lambda genes: Model.fitness_function(genes, self.data, self.weightsShape, self.layers,  self.input_dim)
 
         self.delay = lambda padding=0 : sleep(delay + padding)
 

@@ -23,12 +23,12 @@ class Model:
     #     return model
 
     @staticmethod 
-    def create_model(layers):
+    def create_model(layers,input_dim=8):
         model = Sequential()
         for i, layer_params in enumerate(layers):
             if i == 0:
                 # First layer with input_dim specified
-                model.add(Dense(layer_params['n'], activation=layer_params['activation'], input_dim=8))
+                model.add(Dense(layer_params['n'], activation=layer_params['activation'], input_dim=input_dim))
             else:
                 model.add(Dense(layer_params['n'], activation=layer_params['activation']))
 
@@ -59,11 +59,11 @@ class Model:
         return reshaped_weights
 
     @staticmethod
-    def fitness_function(weights, data, shape_list, layers):      
+    def fitness_function(weights, data, shape_list, layers, input_dim=8):      
         (X, y) = data
 
         weights = Model.prepare_weights(weights, shape_list)
-        model = Model.create_model(layers)
+        model = Model.create_model(layers, input_dim)
         
         model.set_weights(weights)
 

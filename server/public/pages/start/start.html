@@ -91,6 +91,17 @@
             background-color: #0056b3;
         }
 
+        #dataset {
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+
         #Visualize-NN-btn{
             background-color: #28a745;
 
@@ -127,9 +138,6 @@
                 <label for="num_generations">The Number of Generations</label>
                 <input type="number" id="num_generations" name="num_generations" min="1" required value="3">
                 
-                <label for="epochs">epochs</label>
-                <input type="number" id="epochs" name="epochs" min="1" required value="5">
-    
                 <label for="mutateWeight">mutate weight</label>
                 <input type="number" id="mutateWeight" name="mutateWeight" step="0.1" min="0" max="1" required value="0.5">
                 
@@ -138,6 +146,12 @@
 
                 <label for="delay">Delay in seconds</label>
                 <input type="number" id="delay" name="delay" step="0.1" min="0"  required value="1">
+
+                <label for="dataset">Select the dataset</label>
+                <select name="dataset" id="dataset">
+                    <option value="diabetes">diabetes</option>
+                    <option value="haberman">haberman</option>
+                </select>
            </section>
             <section id="nn-algorithm" class="section">
                 <h3>Edit the NN of the Individual</h3>

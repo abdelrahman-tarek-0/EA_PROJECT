@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 
 from src.AI.de_algo import DE
 from src.AI.model import Model
-from src.utils.loaders import load_dataset, load_gene_pool
+from src.utils.loaders import load_dataset, load_dataset_2, load_gene_pool
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -36,12 +36,20 @@ def check_node():
 
 
 
-def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5, num_generations=3, layers=[], delay=0):
+def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5, num_generations=3, layers=[], delay=0, dataset='diabetes'):
     global is_running
     is_running = True
 
+    data = []
+    if dataset == 'diabetes':
+        data = load_dataset()
+    else:
+        data = load_dataset_2()
+
+    input_dim = 8 if dataset == 'diabetes' else 3
+    
     de = DE(
-        data=load_dataset(),
+        data=data,
         Model=Model,
         gene_pool=load_gene_pool(),
         crossoverRate=crossoverRate,
@@ -51,7 +59,8 @@ def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5,
         epochs=epochs,
         generations=num_generations,
         layers=layers,
-        delay=delay
+        delay=delay,
+        input_dim=input_dim
     )
 
     best = de.run()
@@ -60,20 +69,24 @@ def main(*,  epochs=5, num_individuals=100, mutateWeight=0.5, crossoverRate=0.5,
     # print(f'Best Fitness: {best.Fitness}')
     # print(f'Best Genes: {best.Genes}')
 
-    best_model = Model.create_model(layers)
-    best_model.set_weights(Model.prepare_weights(best.Genes[:-1], de.weightsShape))
+
+    best_model = Model.create_model(layers, input_dim)
+    best_model.set_weights(Model.prepare_weights(best.Genes, de.weightsShape))
 
     # (X, y) = load_dataset(False)
     # best_model.fit(X, y, epochs=500, batch_size=10)
     
     modelId = round(time.time()*1000)
 
+    directory = "diabetes" if dataset == 'diabetes' else "haberman"
+
     # # save the model
-    best_model.save(f'./generated_models/{modelId}.keras')
+    best_model.save(f'./generated_models/{directory}/{modelId}.keras')
 
     send_report({
         "command": "finish",
         "id": modelId,
+        "dataset": directory,
         "fitness": best.Fitness
     })
 
@@ -97,6 +110,7 @@ def run():
     crossoverRate = data.get('crossoverRate', 0.5)
     layers = data.get('layers', [])
     delay = data.get('delay', 0)
+    dataset = data.get('dataset', 'diabetes')
     
     best_fitness = main(
         epochs=epochs,
@@ -105,7 +119,8 @@ def run():
         crossoverRate=crossoverRate,
         num_generations=num_generations,
         layers=layers,
-        delay=delay
+        delay=delay,
+        dataset=dataset
     )
 
     is_running = False
@@ -117,11 +132,14 @@ def get_model_info ():
     data = request.json
 
     layers = data.get('layers', [])
+    dataset = data.get('dataset', 'diabetes')
+
+    input_dim = 8 if dataset == 'diabetes' else 3
 
     if len(layers) == 0:
         return 'No layers provided'
     
-    model = Model.create_model(layers)
+    model = Model.create_model(layers, input_dim)
     shape = Model.getModelShapeList(model)
     weights = len(np.concatenate([w.flatten() for w in model.get_weights()]).tolist())
     name = Model.visualize_model(model, f"graph-{round(time.time()*1000)}", "../server/public/uploads")
@@ -140,7 +158,10 @@ def status():
 @app.route('/model-status/', methods=['GET'])
 def model_status():
     modelId = request.args.get('id')
-    modelPath = f'./generated_models/{modelId}.keras'
+    dataset = request.args.get('dataset', 'diabetes')
+
+    location = "diabetes" if dataset == 'diabetes' else "haberman"
+    modelPath = f'./generated_models/{location}/{modelId}.keras'
     isModelExists = os.path.exists(modelPath)
 
     return jsonify({
@@ -153,8 +174,11 @@ def predict():
     data = request.json
     modelId = data.get('id')
     inputDataArray = data.get('data')
-    print(modelId)
-    modelPath = f'./generated_models/{modelId}.keras'
+    dataset = data.get('dataset', 'diabetes')
+
+    location = "diabetes" if dataset == 'diabetes' else "haberman"
+    print(modelId, location)
+    modelPath = f'./generated_models/{location}/{modelId}.keras'
 
     if not os.path.exists(modelPath):
         return 'Model not found'

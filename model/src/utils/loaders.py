@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
 
 
-def load_dataset(split=True):
+def load_dataset():
     names = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome']
     data = pd.read_csv("src/dataset/diabetes.csv", names=names, header=None)
 
@@ -23,13 +23,53 @@ def load_dataset(split=True):
     data.dropna(inplace=True)
 
     numeric_data = data.apply(pd.to_numeric, errors='coerce').dropna()
+    #shuffle data
+    numeric_data = numeric_data.sample(frac=1).reset_index(drop=True)
 
     X = numeric_data.drop('Outcome', axis=1)
     y = numeric_data['Outcome']
 
+    # print(X.shape, y.shape)
+    # print(X.head())
+    # print(y.head())
     
 
     return X, y
+
+def load_dataset_2():
+    names = ['Age','Year','Nodes','IsDead']
+    data = pd.read_csv("src/dataset/haberman.csv", names=names, header=None)
+
+    print(data.isnull().sum())
+
+    print(data.head())
+    print(data.shape)
+    # Replace missing values (0s) with NaN
+    data = data.replace({'Age': {0: np.nan},
+                            'Year': {0: np.nan},
+                            'Nodes': {0: np.nan},
+                            'IsDead': {0: np.nan}}).iloc[1:]
+    
+    # data.dropna(inplace=True)
+
+    print(data.shape)
+    #convert last column to binary
+    data['IsDead'] = data['IsDead'].apply(lambda x: 1 if x == 2 else 0)
+
+
+    numeric_data = data.apply(pd.to_numeric, errors='coerce')
+    #shuffle data
+    numeric_data = numeric_data.sample(frac=1).reset_index(drop=True)
+
+    X = numeric_data.drop('IsDead', axis=1)
+    y = numeric_data['IsDead']
+
+
+    return X, y
+
+
+# load_dataset_2()
+# load_dataset()
 
     # scaler = StandardScaler()
     # X_normalized = scaler.fit_transform(X)

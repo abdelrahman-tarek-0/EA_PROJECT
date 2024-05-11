@@ -20,6 +20,7 @@ const checkBackStatus = async () => {
    }
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const getModelInfo = async (layers) => {
    let res = await fetch(`${modelUrl}/modelInfo/`, {
       method: 'POST',
@@ -45,9 +46,11 @@ const startModel = async (data) => {
          },
          body: JSON.stringify(data),
       })
+      await sleep(1000)
 
       window.location.href = '/reports'
    } catch (error) {
+      console.log(error)
       window.location.href = '/'
    }
 }
@@ -130,10 +133,12 @@ visualizeNNBtn.addEventListener('click', async () => {
       return
    }
 
-   console.log(layers)
+   const dataset = document.querySelector('#dataset').value
+
 
    getModelInfo({
       layers: layers,
+      dataset: dataset,
    }).then((data) => {
       const image = data.image
       const numberOfWeights = data.weights
@@ -152,10 +157,10 @@ form.addEventListener('submit', async (e) => {
    const editAlgorithm = {
       num_individuals: Number(formData.get('num_individuals')),
       num_generations: Number(formData.get('num_generations')),
-      epochs: Number(formData.get('epochs')),
       mutateWeight: Number(formData.get('mutateWeight')),
       crossoverRate: Number(formData.get('crossoverRate')),
       delay: Number(formData.get('delay')),
+      dataset: formData.get('dataset'),
    }
 
    const layersInputs = document.querySelectorAll('.nn-layers').length

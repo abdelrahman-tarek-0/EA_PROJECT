@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        form {
+            width: 75%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        input, button, h1 {
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        input,select  {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        label{
+            margin-right: 10px;
+        }
+
+        img{
+            width: 100%;
+            height: auto;
+        }
+
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #input-fields{
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 95%;
+        }
+
+        #result{
+            display: none;
+        }
+    </style>
+    <title>Document</title>
+</head>
+<body>
+    <h1 data-id="{{ID}}" id="modelId">Model {{ID}}</h1>
+    <section>
+        <form id="modelForm">
+            <h2> Test Model</h2>
+            
+            <section id="input-fields">
+
+                <label for="Age">Age</label>
+                <input type="number" name="Age" id="Age" min="0" value="23  required>
+    
+                <label for="Year">Year</label>
+                <input type="number" name="Year" id="Year" min="60" max="70" value="62"  required>
+                
+                <label for="Nodes">Nodes</label>
+                <input type="number" name="Nodes" id="Nodes" min="0" value="0" required>
+    
+            </section>
+        
+            <button type="submit">Submit</button>
+            <section id="result" >
+                <h2>Result</h2>
+                <p id="result-text"></p>
+            </section>
+        </form>
+
+     
+    </section>
+
+    <script src="/pages/try-model-haberman/model.js"></script>
+</body>
+</html>

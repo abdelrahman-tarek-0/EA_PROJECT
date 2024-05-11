@@ -3,9 +3,16 @@ const form = document.querySelector('#modelForm')
 const results = document.querySelector('#result')
 const modelUrl = 'http://127.0.0.1:8000'
 
+let urlPath = window.location.pathname; 
+let pathParts = urlPath.split('/');
+let dataset = pathParts[pathParts.length - 2]; 
+
+
 const checkModel = async () => {
    try {
-      let res = await fetch(`${modelUrl}/model-status/?id=${modelId}`)
+      console.log(modelId, dataset)
+
+      let res = await fetch(`${modelUrl}/model-status/?id=${modelId}&dataset=${dataset}`)
       let data = await res.json()
       console.log(data)
       if (!data.exists) {
@@ -21,6 +28,8 @@ const checkModel = async () => {
 
 const predict = async (data) => {
    try {
+
+
       let res = await fetch(`${modelUrl}/predict/`, {
          method: 'POST',
          headers: {
@@ -45,30 +54,30 @@ form.addEventListener('submit', async (e) => {
    const formData = new FormData(form)
    const data = {
       id: modelId,
+      dataset: dataset,
       data: [
-         Number(formData.get('Pregnancies')),
-         Number(formData.get('Glucose')),
-         Number(formData.get('BloodPressure')),
-         Number(formData.get('SkinThickness')),
-         Number(formData.get('Insulin')),
-         Number(formData.get('BMI')),
-         Number(formData.get('DiabetesPedigreeFunction')),
          Number(formData.get('Age')),
+         Number(formData.get('Year')),
+         Number(formData.get('Nodes')),
       ],
    }
 
    console.log(data)
 
-   const prediction = await predict(data)
+   const prediction = Number(await predict(data))
+
+
+
+
    const resultsTextEl = document.querySelector('#result-text')
    console.log(resultsTextEl)
 
-   resultsTextEl.innerHTML = prediction
+   resultsTextEl.innerHTML = prediction > 0.5
       ? `
-        <p style="color: red;">You likely have diabetes</p>
+      <p style="color: red;">Is likely dead</p>
     `
       : `
-    <p style="color: blue;">You likely do not have diabetes</p>
+      <p style="color: blue;">Is likely alive</p>
     `
    results.style.display = 'block'
 })

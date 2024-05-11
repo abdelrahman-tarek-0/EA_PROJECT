@@ -76,6 +76,7 @@ const checkBackStatus = async () => {
       }
       return true
    } catch (error) {
+      console.error(error)
       window.location.href = '/'
       return false
    }
@@ -200,8 +201,8 @@ const popupEndAlgorithm = (data) => {
          <div style="display: flex; justify-content: space-between;">
             <div>Options</div>
             <div id="cont-btn">
-               <button onclick="window.open('/model/${data.id}', '_blank')">Try Model</button>
-               <button style="background-color: red;" onclick="window.open('/download/${data.id}', '_blank')">Download Model</button>
+               <button onclick="window.open('/model/${data.dataset}/${data.id}', '_blank')">Try Model</button>
+               <button style="background-color: red;" onclick="window.open('/download/${data.dataset}/${data.id}', '_blank')">Download Model</button>
             </div>
       `,
       showCloseButton: false,
@@ -282,9 +283,9 @@ const editIndividual = (indId, individual) => {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const controller = async (data, delay = 500) => {
-   const li = document.createElement('li')
-   li.textContent = JSON.stringify(data)
-   ulReports.appendChild(li)
+   // const li = document.createElement('li')
+   // li.textContent = JSON.stringify(data)
+   // ulReports.appendChild(li)
 
    const command = data?.command
 
